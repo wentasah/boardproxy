@@ -1,0 +1,7 @@
+boardproxy.cpp
+client.cpp
+client.hpp
+daemon.cpp
+daemon.hpp
+log.hpp
+protocol.hpp
