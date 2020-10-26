@@ -2,6 +2,8 @@
 #include "version.h"
 #include <asio/io_context.hpp>
 #include "daemon.hpp"
+#include "client.hpp"
+#include "log.hpp"
 
 using namespace std;
 
@@ -44,9 +46,17 @@ int main(int argc, char *argv[])
 
     string dir("/run/psr-hw");
 
-    if (opt.daemon) {
-        Daemon d(io, dir);
-        io.run();
+    try {
+        if (opt.daemon) {
+            Daemon d(io, dir);
+            io.run();
+        } else {
+            Client c(io, dir);
+            io.run();
+        }
+    }  catch (std::exception &e) {
+        logger->error(e.what());
+        return 1;
     }
 
     return 0;

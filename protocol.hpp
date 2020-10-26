@@ -6,9 +6,7 @@
 namespace proto {
 
 enum class msg_type {
-    stdin = 1,
-    stdout,
-    stderr,
+    setup
 };
 
 struct msg_header {

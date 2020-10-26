@@ -1,3 +1,4 @@
+#include <sys/stat.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
@@ -5,7 +6,6 @@
 #include <unistd.h>
 #include "debug.hpp"
 #include "daemon.hpp"
-#include <asio/signal_set.hpp>
 #include <asio/local/stream_protocol.hpp>
 #include "log.hpp"
 
@@ -13,19 +13,32 @@ using asio::local::stream_protocol;
 
 Daemon::Daemon(asio::io_context &io, std::string sock_dir)
     : io(io)
-    , acceptor(io, stream_protocol::endpoint(sock_dir + "/boardproxy"))
+    , acceptor(io)
 {
-    // Register signal handlers so that the daemon may be shut down. You may
-    // also want to register for other signals, such as SIGHUP to trigger a
-    // re-read of a configuration file.
-    asio::signal_set signals(io, SIGINT, SIGTERM);
     signals.async_wait(
-        [&](std::error_code /*ec*/, int /*signo*/)
+        [&](std::error_code ec, int signo)
             {
-                io.stop();
+                if (!ec) {
+                    logger->info("Received {} signal", strsignal(signo));
+                    io.stop();
+                } else {
+                    logger->error("Signal handling: {}", ec.message());
+                }
             });
 
+    mkdir(sock_dir.c_str(), S_IRWXU | S_IRWXG); // ignore erros
+    auto path = sock_dir + "/boardproxy";
+    unlink(path.c_str()); // ingore errors
+    acceptor.open();
+    acceptor.bind(stream_protocol::endpoint(path));
+    acceptor.listen();
+
     accept_clients();
+}
+
+Daemon::~Daemon()
+{
+    logger->info("Closing daemon");
 }
 
 void Daemon::accept_clients()
@@ -34,12 +47,17 @@ void Daemon::accept_clients()
         [this](std::error_code ec, stream_protocol::socket socket)
         {
           if (!ec) {
-              logger->info("Client accepted");
-              clients.emplace_back(io, *this, std::move(socket));
+              sessions.emplace_back(io, *this, std::move(socket));
           } else {
-              logger->error("Client accept error {}", ec);
+              logger->error("Client accept error: {}", ec.message());
           }
 
           accept_clients();
         });
+}
+
+
+void Daemon::close_session(Session *session)
+{
+    sessions.remove_if([&](auto &s) { return &s == session; });
 }

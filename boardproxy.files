@@ -5,3 +5,5 @@ daemon.cpp
 daemon.hpp
 log.hpp
 protocol.hpp
+session.cpp
+session.hpp
