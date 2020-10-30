@@ -4,8 +4,11 @@ all: build/build.ninja
 
 .PHONY: all clean test debug
 
-clean test: build/build.ninja
+test: build/build.ninja
 	ninja -C $(<D) $@
+
+clean:
+	rm -rf build
 
 %/build.ninja:
 	meson $(@D) $(MESON_OPTS)

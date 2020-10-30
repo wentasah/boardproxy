@@ -44,7 +44,7 @@ void Session::start_reading_from_client()
 
 void Session::start_process()
 {
-    child = bp::child("sleep 1",
+    child = bp::child(bp::search_path("sleep"), "1",
                       bp::on_exit=[](int exit, const std::error_code& ec_in) {
         logger->info("bash exits: {}, {}", exit, ec_in.message());
     });

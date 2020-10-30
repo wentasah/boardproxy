@@ -4,9 +4,9 @@
 #include <sys/un.h>
 #include <err.h>
 #include <unistd.h>
+#include <asio/local/stream_protocol.hpp>
 #include "debug.hpp"
 #include "daemon.hpp"
-#include <asio/local/stream_protocol.hpp>
 #include "log.hpp"
 
 using asio::local::stream_protocol;

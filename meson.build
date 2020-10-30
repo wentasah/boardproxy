@@ -11,10 +11,12 @@ version_h = vcs_tag(
 
 cxx = meson.get_compiler('cpp')
 
+cxx.has_header('asio.hpp', required : true)
+
 spdlog_proj = subproject('spdlog')
 fmt_proj = subproject('fmt')
 
-boost_dep = dependency('boost')
+boost_dep = dependency('boost', modules : [ 'filesystem' ])
 
 executable(
   'boardproxy',
@@ -31,4 +33,5 @@ executable(
     spdlog_proj.get_variable('spdlog_dep'),
     boost_dep,
   ],
+  install : true,
 )
