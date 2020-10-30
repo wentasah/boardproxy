@@ -30,7 +30,7 @@ stdenv.mkDerivation {
   name = "boardproxy";
   src = ./.;
   nativeBuildInputs = [ meson ninja pkg-config ];
-  buildInputs = [ boost asio fmt spdlog ];
+  buildInputs = [ boost fmt spdlog ];
 
   # Meson is no longer able to pick up Boost automatically.
   # https://github.com/NixOS/nixpkgs/issues/86131

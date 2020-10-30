@@ -1,14 +1,14 @@
-#include <asio.hpp>
-#include "session.hpp"
+#include <boost/asio.hpp>
 #include <unistd.h>
+#include "session.hpp"
 #include "debug.hpp"
 #include "daemon.hpp"
 #include "log.hpp"
 
-using asio::local::stream_protocol;
+using boost::asio::local::stream_protocol;
 namespace bp = boost::process;
 
-Session::Session(asio::io_context &io, Daemon &daemon, stream_protocol::socket sock)
+Session::Session(boost::asio::io_context &io, Daemon &daemon, stream_protocol::socket sock)
     : daemon(daemon)
     , io(io)
     , sock(std::move(sock))
@@ -25,10 +25,10 @@ Session::~Session()
 
 void Session::start_reading_from_client()
 {
-    asio::async_read(sock, asio::buffer(&header, sizeof(header)),
-                     [this](const asio::error_code& ec, std::size_t bytes_transferred) {
+    boost::asio::async_read(sock, boost::asio::buffer(&header, sizeof(header)),
+                     [this](const boost::system::error_code& ec, std::size_t bytes_transferred) {
         if (ec) {
-            if (ec != asio::error::eof)
+            if (ec != boost::asio::error::eof)
                 logger->error("Read error: {}", ec.message());
             close_session();
         } else {
@@ -45,9 +45,9 @@ void Session::start_reading_from_client()
 void Session::start_process()
 {
     child = bp::child(bp::search_path("sleep"), "1",
-                      bp::on_exit=[](int exit, const std::error_code& ec_in) {
+                      io, bp::on_exit([](int exit, const std::error_code& ec_in) {
         logger->info("bash exits: {}, {}", exit, ec_in.message());
-    });
+    }));
 //    int pin[2], pout[2], perr[2];
 
 //    CHECK(pipe(pin));

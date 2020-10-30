@@ -4,14 +4,14 @@
 #include <sys/un.h>
 #include <err.h>
 #include <unistd.h>
-#include <asio/local/stream_protocol.hpp>
+#include <boost/asio/local/stream_protocol.hpp>
 #include "debug.hpp"
 #include "daemon.hpp"
 #include "log.hpp"
 
-using asio::local::stream_protocol;
+using boost::asio::local::stream_protocol;
 
-Daemon::Daemon(asio::io_context &io, std::string sock_dir)
+Daemon::Daemon(boost::asio::io_context &io, std::string sock_dir)
     : io(io)
     , acceptor(io)
 {

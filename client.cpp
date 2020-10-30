@@ -1,15 +1,15 @@
 #include "client.hpp"
-#include <asio.hpp>
+#include <boost/asio.hpp>
 #include "log.hpp"
 
-using asio::local::stream_protocol;
+using boost::asio::local::stream_protocol;
 
-Client::Client(asio::io_context &io, std::string sock_dir)
+Client::Client(boost::asio::io_context &io, std::string sock_dir)
     : sock(io)
 {
     sock.connect(stream_protocol::endpoint(sock_dir + "/boardproxy"));
-    asio::async_read(sock, asio::buffer(buf), asio::transfer_all(),
-                     [this](const asio::error_code& ec, std::size_t bytes_transferred) {
+    boost::asio::async_read(sock, boost::asio::buffer(buf), boost::asio::transfer_all(),
+                     [this](const boost::system::error_code& ec, std::size_t bytes_transferred) {
         if (ec) {
             logger->error("Client read error: {}", ec.message());
         }

@@ -1,6 +1,6 @@
 #include <argp.h>
 #include "version.h"
-#include <asio/io_context.hpp>
+#include <boost/asio/io_context.hpp>
 #include "daemon.hpp"
 #include "client.hpp"
 #include "log.hpp"
@@ -42,7 +42,7 @@ int main(int argc, char *argv[])
 {
     argp_parse(&argp, argc, argv, 0, 0, NULL);
 
-    asio::io_context io;
+    boost::asio::io_context io;
 
     string dir("/run/psr-hw");
 
