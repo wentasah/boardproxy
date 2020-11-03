@@ -29,6 +29,7 @@ private:
 
     boost::process::child child;
     void start_process();
+    void on_process_exit(int exit, const std::error_code& ec_in);
 
     void close_session();
 };

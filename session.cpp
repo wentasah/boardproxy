@@ -1,5 +1,7 @@
 #include <boost/asio.hpp>
 #include <unistd.h>
+#include <functional>
+#include <boost/process/extend.hpp>
 #include "session.hpp"
 #include "debug.hpp"
 #include "daemon.hpp"
@@ -44,10 +46,20 @@ void Session::start_reading_from_client()
 
 void Session::start_process()
 {
-    child = bp::child(bp::search_path("sleep"), "1",
-                      io, bp::on_exit([](int exit, const std::error_code& ec_in) {
-        logger->info("bash exits: {}, {}", exit, ec_in.message());
-    }));
+    using namespace std::placeholders;  // for _1, _2, _3...
+
+    logger->info("Parent pid {}", getpid());
+    child = bp::child(
+                "sleep 1",
+                io,             // Pass io_conext to allow async callbacks, i.e., on_exit
+                bp::extend::on_exec_setup([](auto&) {
+                    logger->info("From pid {}", getpid());
+                }),
+                bp::extend::on_error([](auto&, const std::error_code & ec) {
+                    logger->error("Process spawn error: {}", ec.message());
+                }),
+                bp::on_exit(std::bind(&Session::on_process_exit, this, _1, _2))
+    );
 //    int pin[2], pout[2], perr[2];
 
 //    CHECK(pipe(pin));
@@ -79,7 +91,15 @@ void Session::start_process()
     //    child.start(pid);
 }
 
+void Session::on_process_exit(int exit, const std::error_code &ec_in)
+{
+    logger->info("process exits: {}, {}", exit, ec_in.message());
+    close_session();
+}
+
 void Session::close_session()
 {
+    if (child.running())
+        child.terminate();
     daemon.close_session(this);
 }
