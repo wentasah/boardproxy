@@ -1,22 +1,24 @@
 #ifndef CLIENT_HPP
 #define CLIENT_HPP
 
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/local/stream_protocol.hpp>
+#include <ev++.h>
+#include <array>
+#include "unix_socket.hpp"
 
 // Client-side process (intended to be executed via SSH's ForceCommand)
 
 class Client
 {
 public:
-    Client(boost::asio::io_context &io, std::string sock_dir);
+    Client(ev::loop_ref loop, std::string sock_dir);
+    ~Client();
 
 private:
-    std::array<char, 128> buf;
-    boost::asio::local::stream_protocol::socket sock;
+    std::array<char, 65536> buffer;
 
-    void start_sock_read();
-    void on_daemon_read(const boost::system::error_code& ec, std::size_t bytes_transferred);
+    UnixSocket socket;
+
+    void on_data_from_daemon(ev::io &w, int revents);
 };
 
 #endif // CLIENT_HPP

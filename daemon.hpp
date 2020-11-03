@@ -3,25 +3,27 @@
 
 #include <list>
 #include <string>
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/local/stream_protocol.hpp>
-#include <boost/asio/signal_set.hpp>
+#include <ev++.h>
 #include "session.hpp"
+#include "unix_socket.hpp"
 
 class Daemon {
 public:
-    Daemon(boost::asio::io_context &io, std::string sock_dir);
+    Daemon(ev::loop_ref &loop, std::string sock_dir);
     ~Daemon();
     void run();
     void close_session(Session *session);
 private:
-    boost::asio::io_context &io;
+    ev::loop_ref &loop;
     std::list<Session> sessions;
 
-    boost::asio::signal_set signals {io, SIGINT, SIGTERM};
-    boost::asio::local::stream_protocol::acceptor acceptor;
+    ev::sig sigint_watcher { loop };
+    ev::sig sigterm_watcher { loop };
+    void on_signal(ev::sig &w, int revents);
 
-    void accept_clients();
+    UnixSocket client_listener { loop };
+
+    void on_client_connecting(ev::io &w, int revents);
     //void on_client_connected (ev::io &w, int revents);
 
 };

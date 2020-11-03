@@ -8,15 +8,10 @@ version_h = vcs_tag(
 	command : ['git', 'describe', '--always'],
 )
 
-
 cxx = meson.get_compiler('cpp')
-
-cxx.has_header('asio.hpp', required : true)
 
 spdlog_proj = subproject('spdlog')
 fmt_proj = subproject('fmt')
-
-boost_dep = dependency('boost', modules : [ 'filesystem' ])
 
 executable(
   'boardproxy',
@@ -26,12 +21,13 @@ executable(
     'daemon.cpp',
     'log.cpp',
     'session.cpp',
+    'unix_socket.cpp',
     version_h
   ],
   dependencies : [
     fmt_proj.get_variable('fmt_dep'),
     spdlog_proj.get_variable('spdlog_dep'),
-    boost_dep,
+    cxx.find_library('ev'),
   ],
   install : true,
 )

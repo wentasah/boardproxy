@@ -1,34 +1,26 @@
-#include "client.hpp"
-#include <boost/asio.hpp>
-#include <boost/asio/error.hpp>
 #include <functional>
+#include "client.hpp"
 #include "log.hpp"
+#include "unix_socket.hpp"
 
-using boost::asio::local::stream_protocol;
-
-Client::Client(boost::asio::io_context &io, std::string sock_dir)
-    : sock(io)
+Client::Client(ev::loop_ref loop, std::string sock_dir)
+    : socket(loop)
 {
-    sock.connect(stream_protocol::endpoint(sock_dir + "/boardproxy"));
-    start_sock_read();
+    socket.connect(sock_dir + "/boardproxy");
+    socket.watcher.set<Client, &Client::on_data_from_daemon>(this);
+    socket.watcher.start();
 }
 
-void Client::start_sock_read()
+Client::~Client()
 {
-    using namespace std::placeholders;  // for _1, _2, _3...
-    boost::asio::async_read(sock, boost::asio::buffer(buf), boost::asio::transfer_all(),
-                            std::bind(&Client::on_daemon_read, this, _1, _2));
 }
 
-void Client::on_daemon_read(const boost::system::error_code &ec, std::size_t bytes_transferred)
+void Client::on_data_from_daemon(ev::io &w, int revents)
 {
-    if (ec == boost::asio::error::eof) {
-        logger->info("Server connection closed");
-        return;
+    ssize_t ret = ::read(w.fd, &buffer, sizeof(buffer));
+    if (ret == 0) {
+        logger->info("Server closed connection");
+        w.stop();
     }
-    if (ec) {
-        logger->error("Client read error: {} {} {}", ec.category().name(), ec.value(), ec.message());
-        return;
-    }
-    start_sock_read();
+    logger->error("Client read error: {}", strerror(ENOSYS));
 }

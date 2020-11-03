@@ -1,9 +1,9 @@
 {
   pkgs ? import <nixpkgs> {}
 }:
-with pkgs;
 let
-  spdlog = stdenv.mkDerivation rec {
+  spdlog = with pkgs;
+    stdenv.mkDerivation rec {
       pname = "spdlog";
       version = "1.8.1";
 
@@ -24,16 +24,9 @@ let
         mkdir -p $out/share/doc/spdlog
         cp -rv ../example $out/share/doc/spdlog
       '';
-    };
+  };
+  myBoost = pkgs.boost.overrideAttrs (oldAttrs: {
+    postFixup = "echo NO POST_FIXUP"; # Do not remove header prefix - it makes debugging harder
+  });
 in
-stdenv.mkDerivation {
-  name = "boardproxy";
-  src = ./.;
-  nativeBuildInputs = [ meson ninja pkg-config ];
-  buildInputs = [ boost fmt spdlog ];
-
-  # Meson is no longer able to pick up Boost automatically.
-  # https://github.com/NixOS/nixpkgs/issues/86131
-  BOOST_INCLUDEDIR = "${stdenv.lib.getDev boost}/include";
-  BOOST_LIBRARYDIR = "${stdenv.lib.getLib boost}/lib";
-}
+pkgs.callPackage ./boardproxy.nix { }

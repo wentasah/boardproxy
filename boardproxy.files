@@ -7,3 +7,5 @@ log.hpp
 protocol.hpp
 session.cpp
 session.hpp
+unix_socket.cpp
+unix_socket.hpp

@@ -3,33 +3,31 @@
 
 // Client representation inside the daemon
 
-#include <boost/asio/io_context.hpp>
-#include <boost/asio/local/stream_protocol.hpp>
-#include <boost/asio/buffered_read_stream.hpp>
-#include <vector>
-#include <boost/process.hpp>
+#include <array>
+#include <ev++.h>
 #include "protocol.hpp"
+#include "unix_socket.hpp"
 
 class Daemon;
 
 class Session {
 public:
-    Session(boost::asio::io_context &io, Daemon &daemon,
-           boost::asio::local::stream_protocol::socket sock);
+    Session(ev::loop_ref loop, Daemon &daemon, std::unique_ptr<UnixSocket> socket);
     ~Session();
 private:
     Daemon &daemon;
 
-    boost::asio::io_context &io;
-    boost::asio::local::stream_protocol::socket sock;
+    ev::loop_ref loop;
 
-    void start_reading_from_client();
+    std::unique_ptr<UnixSocket> client;
+
+    void on_data_from_client(ev::io &w, int revents);
     proto::msg_header header;
-    std::vector<char> data;
+    std::array<char, 65536> buffer;
 
-    boost::process::child child;
+    ev::child child_watcher { loop };
     void start_process();
-    void on_process_exit(int exit, const std::error_code& ec_in);
+    void on_process_exit(ev::child &w, int revents);
 
     void close_session();
 };

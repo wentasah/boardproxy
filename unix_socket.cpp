@@ -1,0 +1,97 @@
+#include <fcntl.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/socket.h>
+#include <sys/un.h>
+#include <unistd.h>
+#include <system_error>
+#include <err.h>
+#include "unix_socket.hpp"
+
+UnixSocket::UnixSocket(ev::loop_ref loop)
+    : watcher(loop)
+{
+    int fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+    if (fd == -1)
+        throw std::system_error(errno, std::generic_category(), "socket(AF_UNIX)");
+
+    watcher.set(fd, ev::READ);
+}
+
+UnixSocket::UnixSocket(ev::loop_ref loop, int fd)
+    : watcher(loop)
+{
+    watcher.set(fd, ev::READ);
+}
+
+
+UnixSocket::~UnixSocket()
+{
+    if (watcher.is_active())
+        watcher.stop();
+    close();
+}
+
+void UnixSocket::connect(std::string path)
+{
+    struct sockaddr_un name;
+
+    memset(&name, 0, sizeof(struct sockaddr_un));
+    name.sun_family = AF_UNIX;
+    strncpy(name.sun_path, path.c_str(), sizeof(name.sun_path) - 1);
+
+    int ret = ::connect(watcher.fd, reinterpret_cast<sockaddr*>(&name), sizeof(name));
+    if (ret == -1)
+        throw std::system_error(errno, std::generic_category(), path);
+
+    make_nonblocking();
+}
+
+void UnixSocket::bind(std::string path)
+{
+    struct sockaddr_un name;
+
+    memset(&name, 0, sizeof(struct sockaddr_un));
+    name.sun_family = AF_UNIX;
+    strncpy(name.sun_path, path.c_str(), sizeof(name.sun_path) - 1);
+
+    int ret = ::bind(watcher.fd, reinterpret_cast<sockaddr*>(&name), sizeof(name));
+    if (ret == -1)
+        throw std::system_error(errno, std::generic_category(), path);
+
+    make_nonblocking();
+}
+
+void UnixSocket::listen()
+{
+    int ret = ::listen(watcher.fd, 10);
+    if (ret == -1 && errno != EAGAIN)
+        throw std::system_error(errno, std::generic_category(), "listen");
+}
+
+std::unique_ptr<UnixSocket> UnixSocket::accept()
+{
+    int ret = ::accept(watcher.fd, NULL, NULL);
+    if (ret == -1)
+        throw std::system_error(errno, std::generic_category(), "accept");
+    return std::unique_ptr<UnixSocket>(new UnixSocket(watcher.loop, ret));
+}
+
+void UnixSocket::make_nonblocking()
+{
+    int flags = fcntl(watcher.fd, F_GETFL);
+    if (flags == -1)
+        throw std::system_error(errno, std::generic_category(), "fcntl(F_GETFL)");
+    int ret = fcntl(watcher.fd, F_SETFL, flags | O_NONBLOCK);
+    if (ret == -1)
+        throw std::system_error(errno, std::generic_category(), "fcntl(F_SETFL, O_NONBLOCK)");
+}
+
+void UnixSocket::close()
+{
+    if (watcher.fd != -1)
+        ::close(watcher.fd);
+    watcher.fd = -1;
+}

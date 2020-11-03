@@ -1,6 +1,6 @@
 #include <argp.h>
+#include <ev++.h>
 #include "version.h"
-#include <boost/asio/io_context.hpp>
 #include "daemon.hpp"
 #include "client.hpp"
 #include "log.hpp"
@@ -42,17 +42,17 @@ int main(int argc, char *argv[])
 {
     argp_parse(&argp, argc, argv, 0, 0, NULL);
 
-    boost::asio::io_context io;
+    ev::default_loop loop;
 
     string dir("/run/psr-hw");
 
     try {
         if (opt.daemon) {
-            Daemon d(io, dir);
-            io.run();
+            Daemon d(loop, dir);
+            loop.run();
         } else {
-            Client c(io, dir);
-            io.run();
+            Client c(loop, dir);
+            loop.run();
         }
     }  catch (std::exception &e) {
         logger->error(e.what());
