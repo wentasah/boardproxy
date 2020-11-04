@@ -8,6 +8,25 @@
 #include "daemon.hpp"
 #include "log.hpp"
 
+using namespace std;
+
+template<void (Daemon::*method)(ev::io &w, int)>
+void Daemon::setup_listener(UnixSocket &sock, std::string sock_name)
+{
+    unlink(sock_name.c_str()); // ignore errors
+
+    // Temporary hack until we make permissions configurable. It's
+    // safe because on the server, we have tight directory permission.
+    mode_t old_umask = umask(0);
+
+    sock.bind(sock_name);
+    umask(old_umask);
+    sock.listen();
+
+    sock.watcher.set<Daemon, method>(this);
+    sock.watcher.start();
+}
+
 Daemon::Daemon(ev::loop_ref &io, std::string sock_dir)
     : loop(io)
 {
@@ -17,21 +36,11 @@ Daemon::Daemon(ev::loop_ref &io, std::string sock_dir)
     sigterm_watcher.start(SIGTERM);
 
     mkdir(sock_dir.c_str(), S_IRWXU | S_IRWXG); // ignore erros
-    auto path = sock_dir + "/boardproxy";
-    unlink(path.c_str()); // ingore errors
 
-    // Temporary hack until we make permissions configurable. It's
-    // safe because on the server, we have tight directory permission.
-    mode_t old_umask = umask(0);
+    setup_listener<&Daemon::on_client_connecting>(client_listener, sock_dir + "/boardproxy");
+    setup_listener<&Daemon::on_vxdbg_connecting> (vxdbg_listener,  sock_dir + "/vxdbg");
 
-    client_listener.bind(path);
-    umask(old_umask);
-    client_listener.listen();
-
-    client_listener.watcher.set<Daemon, &Daemon::on_client_connecting>(this);
-    client_listener.watcher.start();
-
-    logger->info("Listening on {}", path);
+    logger->info("Listening in {}", sock_dir);
 }
 
 Daemon::~Daemon()
@@ -42,6 +51,12 @@ Daemon::~Daemon()
 void Daemon::on_client_connecting(ev::io &w, int revents)
 {
     sessions.emplace_back(loop, *this, client_listener.accept());
+}
+
+void Daemon::on_vxdbg_connecting(ev::io &w, int revents)
+{
+    auto socket = vxdbg_listener.accept();
+    logger->info("vxdbg connecting");
 }
 
 

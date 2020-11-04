@@ -22,10 +22,13 @@ private:
     void on_signal(ev::sig &w, int revents);
 
     UnixSocket client_listener { loop };
+    UnixSocket vxdbg_listener { loop };
 
     void on_client_connecting(ev::io &w, int revents);
-    //void on_client_connected (ev::io &w, int revents);
+    void on_vxdbg_connecting(ev::io &w, int revents);
 
+    template<void (Daemon::*method)(ev::io &w, int)>
+    void setup_listener(UnixSocket &sock, std::string sock_name);
 };
 
 #endif // DAEMON_H
