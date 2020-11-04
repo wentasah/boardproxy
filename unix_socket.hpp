@@ -8,7 +8,9 @@
 class UnixSocket
 {
 public:
-    UnixSocket(ev::loop_ref loop);
+    enum class type { seqpacket, stream, datagram };
+
+    UnixSocket(ev::loop_ref loop, type t);
     ~UnixSocket();
 
     void connect(std::string path);

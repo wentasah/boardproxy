@@ -21,8 +21,8 @@ private:
     ev::sig sigterm_watcher { loop };
     void on_signal(ev::sig &w, int revents);
 
-    UnixSocket client_listener { loop };
-    UnixSocket vxdbg_listener { loop };
+    UnixSocket client_listener { loop, UnixSocket::type::seqpacket };
+    UnixSocket vxdbg_listener { loop, UnixSocket::type::stream };
 
     void on_client_connecting(ev::io &w, int revents);
     void on_vxdbg_connecting(ev::io &w, int revents);

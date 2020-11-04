@@ -10,10 +10,18 @@
 #include <err.h>
 #include "unix_socket.hpp"
 
-UnixSocket::UnixSocket(ev::loop_ref loop)
+UnixSocket::UnixSocket(ev::loop_ref loop, type t)
     : watcher(loop)
 {
-    int fd = socket(AF_UNIX, SOCK_SEQPACKET | SOCK_CLOEXEC, 0);
+    int sock_type = SOCK_SEQPACKET;
+
+    switch (t) {
+    case type::datagram:  sock_type = SOCK_DGRAM; break;
+    case type::seqpacket: sock_type = SOCK_SEQPACKET; break;
+    case type::stream:    sock_type = SOCK_STREAM; break;
+    }
+
+    int fd = socket(AF_UNIX, sock_type | SOCK_CLOEXEC, 0);
     if (fd == -1)
         throw std::system_error(errno, std::generic_category(), "socket(AF_UNIX)");
 

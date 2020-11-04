@@ -8,7 +8,7 @@
 
 
 Client::Client(ev::loop_ref loop, std::string sock_dir)
-    : socket(loop)
+    : socket(loop, UnixSocket::type::seqpacket)
 {
     std::cout << "Welcome to boardproxy" << std::endl;
     socket.connect(sock_dir + "/boardproxy");
