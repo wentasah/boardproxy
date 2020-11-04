@@ -56,7 +56,15 @@ void Daemon::on_client_connecting(ev::io &w, int revents)
 void Daemon::on_vxdbg_connecting(ev::io &w, int revents)
 {
     auto socket = vxdbg_listener.accept();
-    logger->info("vxdbg connecting");
+    struct ucred cred;
+    socklen_t len = sizeof(cred);
+    int ret = getsockopt(socket->watcher.fd, SOL_SOCKET, SO_PEERCRED, &cred, &len);
+    if (ret == -1) {
+        logger->error("getsockopt(SO_PEERCRED): {}", strerror(errno));
+        return;
+    }
+
+    logger->info("vxdbg connecting pid={}", cred.pid);
 }
 
 
