@@ -139,7 +139,6 @@ void Session::start_process()
     auto args = boost::program_options::split_unix(board->command);
     vector<const char*> cargs;
     transform(begin(args), end(args), back_inserter(cargs), [](auto &a) { return a.c_str(); });
-    std::for_each(begin(cargs), end(cargs), [&](auto &a) { logger->info("arg {}", a); });
     cargs.push_back(nullptr);
 
     pid_t pid = fork();
