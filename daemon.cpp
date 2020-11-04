@@ -20,7 +20,12 @@ Daemon::Daemon(ev::loop_ref &io, std::string sock_dir)
     auto path = sock_dir + "/boardproxy";
     unlink(path.c_str()); // ingore errors
 
+    // Temporary hack until we make permissions configurable. It's
+    // safe because on the server, we have tight directory permission.
+    mode_t old_umask = umask(0);
+
     client_listener.bind(path);
+    umask(old_umask);
     client_listener.listen();
 
     client_listener.watcher.set<Daemon, &Daemon::on_client_connecting>(this);
