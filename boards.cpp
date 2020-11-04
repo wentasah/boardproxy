@@ -6,7 +6,7 @@ std::list<Board> boards = {
   { "bash -c 'echo Welcome to board 1; sleep 3'", "127.0.0.1" },
   { "bash -c 'echo Welcome to board 2; sleep 3'", "127.0.0.1" },
 #else
-#define CMD "ssh psr-hw@c2c1 sterm -b 2000 -s 115200 /dev/serial/by-id/"
+#define CMD "ssh -t psr-hw@c2c1 sterm -b 2000 -s 115200 /dev/serial/by-id/"
   { CMD "usb-FTDI_FT230X_Basic_UART_DJ00EM7L-if00-port0", "10.35.95.50" },
   { CMD "usb-FTDI_FT230X_Basic_UART_DJ00ENK1-if00-port0", "10.35.95.51" },
   { CMD "usb-FTDI_FT230X_Basic_UART_DJ00EO5X-if00-port0", "10.35.95.52" },
