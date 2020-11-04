@@ -13,7 +13,7 @@
 UnixSocket::UnixSocket(ev::loop_ref loop)
     : watcher(loop)
 {
-    int fd = socket(AF_UNIX, SOCK_SEQPACKET, 0);
+    int fd = socket(AF_UNIX, SOCK_SEQPACKET | SOCK_CLOEXEC, 0);
     if (fd == -1)
         throw std::system_error(errno, std::generic_category(), "socket(AF_UNIX)");
 
@@ -73,7 +73,7 @@ void UnixSocket::listen()
 
 std::unique_ptr<UnixSocket> UnixSocket::accept()
 {
-    int ret = ::accept(watcher.fd, NULL, NULL);
+    int ret = ::accept4(watcher.fd, NULL, NULL, SOCK_CLOEXEC | SOCK_NONBLOCK);
     if (ret == -1)
         throw std::system_error(errno, std::generic_category(), "accept");
     return std::unique_ptr<UnixSocket>(new UnixSocket(watcher.loop, ret));

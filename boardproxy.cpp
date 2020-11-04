@@ -44,6 +44,8 @@ int main(int argc, char *argv[])
 
     ev::default_loop loop;
 
+    spdlog::set_automatic_registration(false);
+
     string dir("/run/psr-hw");
 
     try {

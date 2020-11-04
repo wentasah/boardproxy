@@ -15,10 +15,11 @@ public:
 
 private:
     std::array<char, 65536> buffer;
-
     UnixSocket socket;
 
     void on_data_from_daemon(ev::io &w, int revents);
+
+    void send_setup();
 };
 
 #endif // CLIENT_HPP

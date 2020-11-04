@@ -25,6 +25,8 @@ Daemon::Daemon(ev::loop_ref &io, std::string sock_dir)
 
     client_listener.watcher.set<Daemon, &Daemon::on_client_connecting>(this);
     client_listener.watcher.start();
+
+    logger->info("Listening on {}", path);
 }
 
 Daemon::~Daemon()
