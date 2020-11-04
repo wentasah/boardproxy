@@ -22,10 +22,10 @@ private:
     void on_signal(ev::sig &w, int revents);
 
     UnixSocket client_listener { loop, UnixSocket::type::seqpacket };
-    UnixSocket vxdbg_listener { loop, UnixSocket::type::stream };
+    UnixSocket wrproxy_listener { loop, UnixSocket::type::stream };
 
     void on_client_connecting(ev::io &w, int revents);
-    void on_vxdbg_connecting(ev::io &w, int revents);
+    void on_wrproxy_connecting(ev::io &w, int revents);
 
     template<void (Daemon::*method)(ev::io &w, int)>
     void setup_listener(UnixSocket &sock, std::string sock_name);

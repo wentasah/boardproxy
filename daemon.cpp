@@ -38,7 +38,7 @@ Daemon::Daemon(ev::loop_ref &io, std::string sock_dir)
     mkdir(sock_dir.c_str(), S_IRWXU | S_IRWXG); // ignore erros
 
     setup_listener<&Daemon::on_client_connecting>(client_listener, sock_dir + "/boardproxy");
-    setup_listener<&Daemon::on_vxdbg_connecting> (vxdbg_listener,  sock_dir + "/vxdbg");
+    setup_listener<&Daemon::on_wrproxy_connecting> (wrproxy_listener,  sock_dir + "/wrproxy");
 
     logger->info("Listening in {}", sock_dir);
 }
@@ -53,9 +53,9 @@ void Daemon::on_client_connecting(ev::io &w, int revents)
     sessions.emplace_back(loop, *this, client_listener.accept());
 }
 
-void Daemon::on_vxdbg_connecting(ev::io &w, int revents)
+void Daemon::on_wrproxy_connecting(ev::io &w, int revents)
 {
-    auto socket = vxdbg_listener.accept();
+    auto socket = wrproxy_listener.accept();
     struct ucred cred;
     socklen_t len = sizeof(cred);
     int ret = getsockopt(socket->watcher.fd, SOL_SOCKET, SO_PEERCRED, &cred, &len);
@@ -64,7 +64,7 @@ void Daemon::on_vxdbg_connecting(ev::io &w, int revents)
         return;
     }
 
-    logger->info("vxdbg connecting pid={}", cred.pid);
+    logger->info("wrproxy connecting pid={}", cred.pid);
 }
 
 
