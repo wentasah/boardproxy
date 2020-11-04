@@ -1,5 +1,6 @@
 #include <functional>
 #include <sys/socket.h>
+#include <iostream>
 #include "client.hpp"
 #include "log.hpp"
 #include "unix_socket.hpp"
@@ -9,6 +10,7 @@
 Client::Client(ev::loop_ref loop, std::string sock_dir)
     : socket(loop)
 {
+    std::cout << "Welcome to boardproxy" << std::endl;
     socket.connect(sock_dir + "/boardproxy");
     socket.watcher.set<Client, &Client::on_data_from_daemon>(this);
     socket.watcher.start();
@@ -27,7 +29,7 @@ void Client::on_data_from_daemon(ev::io &w, int revents)
         logger->info("Server closed connection");
         w.stop();
     }
-    logger->error("Client read error: {}", strerror(ENOSYS));
+    //logger->error("Client read error: {}", strerror(ENOSYS));
 }
 
 void Client::send_setup()
