@@ -2,9 +2,9 @@ all: build/build.ninja
 # Redirect everything to stderr so that QtCreator sees the error messages
 	ninja -C $(<D) 1>&2
 
-.PHONY: all clean test debug
+.PHONY: all clean test debug install
 
-test: build/build.ninja
+test install: build/build.ninja
 	ninja -C $(<D) $@
 
 clean:
