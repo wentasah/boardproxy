@@ -13,6 +13,12 @@ cxx = meson.get_compiler('cpp')
 spdlog_proj = subproject('spdlog')
 fmt_proj = subproject('fmt')
 
+args = []
+
+if get_option('local_test')
+  args += '-DLOCAL_TEST'
+endif
+
 executable(
   'boardproxy',
   [
@@ -33,5 +39,6 @@ executable(
     cxx.find_library('ev'),
     dependency('boost', modules : [ 'program_options' ]),
   ],
+  cpp_args : args,
   install : true,
 )

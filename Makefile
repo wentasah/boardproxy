@@ -13,7 +13,7 @@ clean:
 %/build.ninja:
 	meson $(@D) $(MESON_OPTS)
 
-debug: MESON_OPTS=--buildtype=debug -Db_sanitize=address,undefined --optimization=g
+debug: MESON_OPTS=--buildtype=debug -Db_sanitize=address,undefined --optimization=g -Dlocal_test=true
 debug: build/build.ninja
 
 
