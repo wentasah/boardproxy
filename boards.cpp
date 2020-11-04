@@ -3,8 +3,8 @@
 std::list<Board> boards = {
 #if defined(LOCAL_TEST)
   // Version for testing without real board (until we add configuration file support)
-  { "bash -c 'echo Welcome to board 1; sleep 3'", "127.0.0.1" },
-  { "bash -c 'echo Welcome to board 2; sleep 3'", "127.0.0.1" },
+  { "bash -c 'echo This is board 1; sleep inf'", "127.0.0.1" },
+  { "bash -c 'echo This is board 2; sleep inf'", "127.0.0.1" },
 #else
 #define CMD "ssh -t psr-hw@c2c1 sterm -b 2000 -s 115200 /dev/serial/by-id/"
   { CMD "usb-FTDI_FT230X_Basic_UART_DJ00EM7L-if00-port0", "10.35.95.50" },
