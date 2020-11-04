@@ -17,6 +17,9 @@ executable(
   'boardproxy',
   [
     'boardproxy.cpp',
+
+    'board.cpp',
+    'boards.cpp',
     'client.cpp',
     'daemon.cpp',
     'log.cpp',
@@ -28,6 +31,7 @@ executable(
     fmt_proj.get_variable('fmt_dep'),
     spdlog_proj.get_variable('spdlog_dep'),
     cxx.find_library('ev'),
+    dependency('boost', modules : [ 'program_options' ]),
   ],
   install : true,
 )

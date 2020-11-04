@@ -2,11 +2,14 @@
 #include <functional>
 #include <sys/types.h>
 #include <sys/socket.h>
-#include "session.hpp"
 #include <spdlog/sinks/stdout_color_sinks.h>
+#include <boost/program_options/parsers.hpp>
+#include "session.hpp"
 #include "debug.hpp"
 #include "daemon.hpp"
 #include "log.hpp"
+#include "boards.hpp"
+#include <cstdio>
 
 using namespace std;
 
@@ -24,22 +27,21 @@ Session::Session(ev::loop_ref loop, Daemon &daemon, std::unique_ptr<UnixSocket> 
 
 Session::~Session()
 {
+    if (board)
+        board->release();
     logger->info("Closing session {}", (void*)this);
 }
 
 void Session::on_data_from_client(ev::io &w, int revents)
 {
-    int myfds[3]; // sent stdin/out/err from client
-
     struct msghdr msg = { 0 };
-    struct cmsghdr *cmsg = NULL;
     struct iovec io = {
         .iov_base = &buffer,
         .iov_len = sizeof(buffer)
     };
     union {         /* Ancillary data buffer, wrapped in a union
                        in order to ensure it is suitably aligned */
-        char buf[CMSG_SPACE(sizeof(myfds))];
+        char buf[CMSG_SPACE(sizeof(int[3]))];
         struct cmsghdr align;
     } u;
 
@@ -64,32 +66,7 @@ void Session::on_data_from_client(ev::io &w, int revents)
     using namespace proto;
     switch (h.id) {
     case msg_type::setup: {
-        auto s = reinterpret_cast<setup*>(&buffer);
-
-        if (msg.msg_controllen < sizeof(myfds)) {
-            logger->error("control len {} < {}", msg.msg_controllen, sizeof(myfds));
-            close_session();
-        }
-        for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
-            if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS) {
-                memcpy(&myfds, CMSG_DATA(cmsg), sizeof(myfds));
-                break;
-            }
-        }
-        if (cmsg == NULL) {
-            logger->error("SCM_RIGHTS not received");
-            close_session();
-        }
-
-        fd_in  = myfds[0];
-        fd_out = myfds[1];
-        fd_err = myfds[2];
-
-        ppid = s->ppid;
-
-        logger->info("ppid {}", s->ppid);
-
-        start_process();
+        on_setup_msg(msg);
         break;
     }
     default:
@@ -104,9 +81,66 @@ void Session::on_data_from_client(ev::io &w, int revents)
 //        start_reading_from_client();
 }
 
+void Session::on_setup_msg(struct msghdr msg)
+{
+    int myfds[3]; // sent stdin/out/err from client
+    bool fds_set = false;
+
+    struct cmsghdr *cmsg = NULL;
+
+    using namespace proto;
+
+    auto s = reinterpret_cast<setup*>(&buffer);
+
+    if (msg.msg_controllen < sizeof(myfds)) {
+        logger->error("control len {} < {}", msg.msg_controllen, sizeof(myfds));
+        close_session();
+    }
+    for (cmsg = CMSG_FIRSTHDR(&msg); cmsg != NULL; cmsg = CMSG_NXTHDR(&msg, cmsg)) {
+        if (cmsg->cmsg_level == SOL_SOCKET && cmsg->cmsg_type == SCM_RIGHTS) {
+            memcpy(&myfds, CMSG_DATA(cmsg), sizeof(myfds));
+            fds_set = true;
+            break;
+        }
+    }
+    if (cmsg == NULL || !fds_set) {
+        logger->error("SCM_RIGHTS not received");
+        close_session();
+        return;
+    }
+
+    fd_in  = myfds[0];
+    fd_out = myfds[1];
+    fd_err = myfds[2];
+
+    ppid = s->ppid;
+
+    logger->info("ppid {}", s->ppid);
+
+    board = find_available_board();
+
+    if (!board) {
+        dprintf(fd_err, "No board currently available. Please, try it later.\n");
+        close_session();
+        return;
+    }
+
+    board->acquire(this);
+    start_process();
+}
+
 void Session::start_process()
 {
-    logger->info("Parent pid {}", getpid());
+    using namespace std;
+
+    logger->info("Starting: {}", board->command);
+
+    // Prepare command line arguments for exec()
+    auto args = boost::program_options::split_unix(board->command);
+    vector<const char*> cargs;
+    transform(begin(args), end(args), back_inserter(cargs), [](auto &a) { return a.c_str(); });
+    std::for_each(begin(cargs), end(cargs), [&](auto &a) { logger->info("arg {}", a); });
+    cargs.push_back(nullptr);
 
     pid_t pid = fork();
     if (pid == -1)
@@ -119,7 +153,7 @@ void Session::start_process()
         close(fd_out);
         close(fd_err);
 
-        execlp("bash", "bash", NULL);
+        execvp(cargs[0], const_cast<char**>(cargs.data()));
         throw std::system_error(errno, std::generic_category(), "exec");
     }
     close(fd_in);
@@ -131,7 +165,7 @@ void Session::start_process()
 
 void Session::on_process_exit(ev::child &w, int revents)
 {
-    logger->info("process exits: {}", w.rstatus);
+    logger->info("process exits with status {}", WEXITSTATUS(w.rstatus));
     close_session();
 }
 
@@ -141,4 +175,13 @@ void Session::close_session()
         ::kill(child_watcher.pid, SIGKILL);
     }
     daemon.close_session(this);
+}
+
+Board *Session::find_available_board()
+{
+    for (auto &board : boards) {
+        if (board.is_available())
+            return &board;
+    }
+    return nullptr;
 }
