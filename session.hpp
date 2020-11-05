@@ -11,12 +11,19 @@
 #include "board.hpp"
 
 class Daemon;
+class WrProxy;
 
 class Session {
 public:
     Session(ev::loop_ref loop, Daemon &daemon, std::unique_ptr<UnixSocket> socket);
     ~Session();
+
+    pid_t get_ppid() const { return ppid; }
+
+    void new_wrproxy_connection(std::unique_ptr<UnixSocket> s);
+    void close_wrproxy();
 private:
+
     std::shared_ptr<spdlog::logger> logger;
 
     Daemon &daemon;
@@ -38,6 +45,8 @@ private:
     ev::child child_watcher { loop };
     void start_process();
     void on_process_exit(ev::child &w, int revents);
+
+    std::unique_ptr<WrProxy> wrproxy;
 
     void close_session();
 

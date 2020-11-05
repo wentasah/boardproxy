@@ -29,6 +29,8 @@ private:
 
     template<void (Daemon::*method)(ev::io &w, int)>
     void setup_listener(UnixSocket &sock, std::string sock_name);
+
+    Session *find_session_by_ppid(pid_t ppid);
 };
 
 #endif // DAEMON_H

@@ -4,12 +4,13 @@
 #include <sys/socket.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <boost/program_options/parsers.hpp>
+#include <cstdio>
 #include "session.hpp"
 #include "debug.hpp"
 #include "daemon.hpp"
 #include "log.hpp"
 #include "boards.hpp"
-#include <cstdio>
+#include "wrproxy.hpp"
 
 using namespace std;
 
@@ -30,6 +31,16 @@ Session::~Session()
     if (board)
         board->release();
     logger->info("Closing session {}", (void*)this);
+}
+
+void Session::new_wrproxy_connection(std::unique_ptr<UnixSocket> s)
+{
+    wrproxy = make_unique<WrProxy>(*this, logger, move(s), board->ip_address);
+}
+
+void Session::close_wrproxy()
+{
+    wrproxy.reset();
 }
 
 void Session::on_data_from_client(ev::io &w, int revents)

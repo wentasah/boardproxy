@@ -56,15 +56,21 @@ void Daemon::on_client_connecting(ev::io &w, int revents)
 void Daemon::on_wrproxy_connecting(ev::io &w, int revents)
 {
     auto socket = wrproxy_listener.accept();
-    struct ucred cred;
-    socklen_t len = sizeof(cred);
-    int ret = getsockopt(socket->watcher.fd, SOL_SOCKET, SO_PEERCRED, &cred, &len);
-    if (ret == -1) {
-        logger->error("getsockopt(SO_PEERCRED): {}", strerror(errno));
-        return;
+    struct ucred cred = socket->peer_cred();
+    Session *s = find_session_by_ppid(cred.pid);
+    if (s) {
+        s->new_wrproxy_connection(std::move(socket));
+    } else {
+        logger->error("Cannot find session for wrproxy connection from pid {}", cred.pid);
     }
+}
 
-    logger->info("wrproxy connecting pid={}", cred.pid);
+Session *Daemon::find_session_by_ppid(pid_t ppid)
+{
+    for (auto &s : sessions)
+        if (s.get_ppid() == ppid)
+            return &s;
+    return nullptr;
 }
 
 

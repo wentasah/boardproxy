@@ -22,6 +22,8 @@ public:
     void make_nonblocking();
     void close();
 
+    struct ucred peer_cred();
+
     ev::io watcher;
 private:
     UnixSocket(ev::loop_ref loop, int fd);

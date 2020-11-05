@@ -31,6 +31,7 @@ executable(
     'log.cpp',
     'session.cpp',
     'unix_socket.cpp',
+    'wrproxy.cpp',
     version_h
   ],
   dependencies : [

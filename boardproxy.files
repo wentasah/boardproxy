@@ -13,3 +13,5 @@ session.cpp
 session.hpp
 unix_socket.cpp
 unix_socket.hpp
+wrproxy.cpp
+wrproxy.hpp

@@ -103,3 +103,13 @@ void UnixSocket::close()
         ::close(watcher.fd);
     watcher.fd = -1;
 }
+
+struct ucred UnixSocket::peer_cred()
+{
+    struct ucred cred;
+    socklen_t len = sizeof(cred);
+    int ret = getsockopt(watcher.fd, SOL_SOCKET, SO_PEERCRED, &cred, &len);
+    if (ret == -1)
+        throw std::system_error(errno, std::generic_category(), "getsockopt(SO_PEERCRED)");
+    return cred;
+}
