@@ -7,10 +7,12 @@
 #include <vector>
 #include <spdlog/logger.h>
 #include "unix_socket.hpp"
+#include "util.hpp"
 
 class Session;
 
-// Implementatin of (a subset of) WindRiver proxy protocol
+// Implementatin of (a subset of) WindRiver proxy protocol for
+// connecting WindRiver Workbench IDE to VxWorks targets.
 
 class WrProxy
 {
@@ -23,9 +25,9 @@ private:
     Session &session;
     std::shared_ptr<spdlog::logger> logger;
 
-    enum { COMMAND, DATA } mode = COMMAND;
+    enum { COMMAND, DATA } state = COMMAND;
 
-    std::vector<char> buf_c2t;
+    std::vector<char, default_init_allocator<char>> buf_c2t;
     std::array<char, 65535> buf_t2c;
     std::unique_ptr<UnixSocket> client;
     ev::io target;
@@ -34,6 +36,12 @@ private:
     void on_target_data(ev::io &w, int revents);
 
     void parse_command();
+    void handle_connect(std::istringstream &cmd);
+
+    template<typename FormatString, typename... Args>
+    void fail(const FormatString &fmt, const Args &... args);
+
+    void close();
 };
 
 #endif // WRPROXY_HPP

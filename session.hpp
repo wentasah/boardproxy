@@ -21,8 +21,8 @@ public:
     pid_t get_ppid() const { return ppid; }
 
     void new_wrproxy_connection(std::unique_ptr<UnixSocket> s);
-    void close_wrproxy();
 private:
+    friend WrProxy;
 
     std::shared_ptr<spdlog::logger> logger;
 

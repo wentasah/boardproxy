@@ -4,6 +4,7 @@
 #include "daemon.hpp"
 #include "client.hpp"
 #include "log.hpp"
+#include "util.hpp"
 
 using namespace std;
 

@@ -35,12 +35,8 @@ Session::~Session()
 
 void Session::new_wrproxy_connection(std::unique_ptr<UnixSocket> s)
 {
+    wrproxy.reset(); // Deallocate old proxy (if any)
     wrproxy = make_unique<WrProxy>(*this, logger, move(s), board->ip_address);
-}
-
-void Session::close_wrproxy()
-{
-    wrproxy.reset();
 }
 
 void Session::on_data_from_client(ev::io &w, int revents)
