@@ -1,5 +1,6 @@
 #include <unistd.h>
 #include <functional>
+#include <pwd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <spdlog/sinks/stdout_color_sinks.h>
@@ -19,8 +20,9 @@ Session::Session(ev::loop_ref loop, Daemon &daemon, std::unique_ptr<UnixSocket> 
     , daemon(daemon)
     , loop(loop)
     , client(std::move(socket))
+    , username_cred(get_username_cred())
 {
-    logger->info("New session", (void*)this);
+    logger->info("New session ({})", username_cred);
 
     client->watcher.set<Session, &Session::on_data_from_client>(this);
     client->watcher.start();
@@ -30,7 +32,7 @@ Session::~Session()
 {
     if (board)
         board->release();
-    logger->info("Closing session {}", (void*)this);
+    logger->info("Closing session ({})", username_cred);
 }
 
 void Session::new_wrproxy_connection(std::unique_ptr<UnixSocket> s)
@@ -122,7 +124,7 @@ void Session::on_setup_msg(struct msghdr msg)
 
     ppid = s->ppid;
 
-    logger->info("ppid {}", s->ppid);
+    logger->info("Client PPID {}", s->ppid);
 
     board = find_available_board();
 
@@ -190,4 +192,24 @@ Board *Session::find_available_board()
             return &board;
     }
     return nullptr;
+}
+
+string Session::get_username_cred()
+{
+    auto cred = client->peer_cred();
+
+    long bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
+    if (bufsize == -1)          /* Value was indeterminate */
+        bufsize = 16384;        /* Should be more than enough */
+    vector<char> buf(bufsize);
+    struct passwd pwd, *result;
+    int err = getpwuid_r(cred.uid, &pwd, buf.data(), buf.size(), &result);
+    if (err != 0) {
+        logger->error("getpwuid error: {}", strerror(err));
+    } else if (result == NULL) {
+        logger->error("No pwd entry for UID {}", cred.uid);
+    } else {
+        return result->pw_name;
+    }
+    return "";
 }

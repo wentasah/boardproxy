@@ -36,7 +36,7 @@ private:
     // Data from the client
     int fd_in, fd_out, fd_err; // file descriptors
     pid_t ppid;
-    std::string username;
+    std::string username_cred, username;
 
     std::array<char, 65536> buffer;
     void on_data_from_client(ev::io &w, int revents);
@@ -51,6 +51,8 @@ private:
     void close_session();
 
     Board *find_available_board();
+
+    std::string get_username_cred();
 };
 
 #endif // CLIENT_H
