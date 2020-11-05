@@ -55,7 +55,7 @@ void WrProxy::on_client_data(ev::io &w, int revents)
     case COMMAND:
         return parse_command();
     case DATA: {
-        logger->info("wrproxy: DATA {}", buf.size());
+        logger->trace("wrproxy: DATA {}", buf.size());
         uint32_t len;
         if (buf.size() < sizeof(len))
             break;
@@ -87,7 +87,7 @@ void WrProxy::on_target_data(ev::io &w, int revents)
         logger->info("wrproxy: target closed the connection???", strerror(errno));
         return close();
     }
-    logger->info("wrproxy: target sent {} bytes", ret);
+    logger->trace("wrproxy: target sent {} bytes", ret);
 
     size_t size = ret;
     uint32_t len = htobe32(size);
