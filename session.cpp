@@ -126,7 +126,7 @@ void Session::on_setup_msg(struct msghdr msg)
 
     ppid = s->ppid;
 
-    logger->info("Client PPID {}", s->ppid);
+    logger->debug("Client PPID {}", s->ppid);
 
     board = find_available_board();
 
@@ -138,6 +138,8 @@ void Session::on_setup_msg(struct msghdr msg)
     }
 
     board->acquire(this);
+    logger->info("Associated with board {}", board->ip_address);
+
     start_process();
 }
 
