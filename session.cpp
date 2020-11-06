@@ -131,6 +131,7 @@ void Session::on_setup_msg(struct msghdr msg)
     board = find_available_board();
 
     if (!board) {
+        logger->warn("No board currently available");
         dprintf(fd_err, "No board currently available. Please, try it later.\n");
         close_session();
         return;
