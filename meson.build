@@ -1,5 +1,8 @@
 project('boardproxy', [ 'cpp' ],
-	default_options : [ 'cpp_std=gnu++17' ],
+	default_options : [
+	  'cpp_std=gnu++17',
+	  'buildtype=release',
+	],
        )
 
 version_h = vcs_tag(
