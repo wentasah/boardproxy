@@ -15,8 +15,10 @@
 
 using namespace std;
 
+uint64_t Session::counter = 0;
+
 Session::Session(ev::loop_ref loop, Daemon &daemon, std::unique_ptr<UnixSocket> socket)
-    : logger(spdlog::stderr_color_st(fmt::format("session {}", (void*)this)))
+    : logger(spdlog::stderr_color_st(fmt::format("session {}", id)))
     , daemon(daemon)
     , loop(loop)
     , client(std::move(socket))

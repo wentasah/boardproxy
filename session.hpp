@@ -24,6 +24,9 @@ public:
 private:
     friend WrProxy;
 
+    static uint64_t counter;
+    const uint64_t id = { counter++ };
+
     std::shared_ptr<spdlog::logger> logger;
 
     Daemon &daemon;
