@@ -6,6 +6,7 @@
 #include <unistd.h>
 #include "debug.hpp"
 #include "daemon.hpp"
+#include "boards.hpp"
 #include "log.hpp"
 
 using namespace std;
@@ -48,6 +49,17 @@ Daemon::~Daemon()
     logger->info("Closing daemon");
 }
 
+void Daemon::assign_board(Session *session)
+{
+    Board *brd = find_available_board();
+
+    // Notify the session about board availability
+    session->assign_board(brd);
+
+    if (!brd)
+        wait_queue.push_back(session);
+}
+
 void Daemon::on_client_connecting(ev::io &w, int revents)
 {
     sessions.emplace_back(loop, *this, client_listener.accept());
@@ -73,10 +85,37 @@ Session *Daemon::find_session_by_ppid(pid_t ppid)
     return nullptr;
 }
 
+Board *Daemon::find_available_board()
+{
+    for (auto &board : boards) {
+        if (board.is_available())
+            return &board;
+    }
+    return nullptr;
+}
+
 
 void Daemon::close_session(Session *session)
 {
+    wait_queue.remove_if([&](auto &s) { return s == session; });
     sessions.remove_if([&](auto &s) { return &s == session; });
+
+    if (wait_queue.size() > 0) {
+        Board *board = find_available_board();
+        if (board) {
+            Session *sess = wait_queue.front();
+            wait_queue.pop_front();
+            sess->assign_board(board);
+        }
+    }
+}
+
+void Daemon::print_status(int fd)
+{
+    for (const Session &sess: sessions) {
+        string str = sess.get_status_line();
+        dprintf(fd, "%s\n", str.c_str());
+    }
 }
 
 void Daemon::on_signal(ev::sig &w, int revents)

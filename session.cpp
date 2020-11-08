@@ -6,11 +6,11 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <boost/program_options/parsers.hpp>
 #include <cstdio>
+#include <fmt/format.h>
 #include "session.hpp"
 #include "debug.hpp"
 #include "daemon.hpp"
 #include "log.hpp"
-#include "boards.hpp"
 #include "wrproxy.hpp"
 
 using namespace std;
@@ -41,6 +41,13 @@ void Session::new_wrproxy_connection(std::unique_ptr<UnixSocket> s)
 {
     wrproxy.reset(); // Deallocate old proxy (if any)
     wrproxy = make_unique<WrProxy>(*this, logger, move(s), board->ip_address);
+}
+
+string Session::get_status_line() const
+{
+    return fmt::format(FMT_STRING("{:10s} {:15s}"),
+                       username_cred,
+                       board ? board->ip_address : "waiting");
 }
 
 void Session::on_data_from_client(ev::io &w, int revents)
@@ -128,19 +135,24 @@ void Session::on_setup_msg(struct msghdr msg)
 
     logger->debug("Client PPID {}", s->ppid);
 
-    board = find_available_board();
+    // Call this->assign_board either with a board or nullptr
+    daemon.assign_board(this);
+}
 
-    if (!board) {
+void Session::assign_board(Board *brd)
+{
+    if (brd) {
+        board = brd;
+        board->acquire(this);
+        logger->info("Associated with board {}", board->ip_address);
+        dprintf(fd_err, "Connecting to board %s\n", board->ip_address.c_str());
+
+        start_process();
+    } else {
         logger->warn("No board currently available");
-        dprintf(fd_err, "No board currently available. Please, try it later.\n");
-        close_session();
-        return;
+        daemon.print_status(fd_err);
+        dprintf(fd_err, "No board currently available. Waiting...\n");
     }
-
-    board->acquire(this);
-    logger->info("Associated with board {}", board->ip_address);
-
-    start_process();
 }
 
 void Session::start_process()
@@ -188,15 +200,6 @@ void Session::close_session()
         ::kill(child_watcher.pid, SIGKILL);
     }
     daemon.close_session(this);
-}
-
-Board *Session::find_available_board()
-{
-    for (auto &board : boards) {
-        if (board.is_available())
-            return &board;
-    }
-    return nullptr;
 }
 
 string Session::get_username_cred()

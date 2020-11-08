@@ -12,10 +12,15 @@ public:
     Daemon(ev::loop_ref &loop, std::string sock_dir);
     ~Daemon();
     void run();
+    void assign_board(Session *session);
     void close_session(Session *session);
+
+    void print_status(int fd);
 private:
     ev::loop_ref &loop;
-    std::list<Session> sessions;
+
+    std::list<Session> sessions;    // all sessions
+    std::list<Session*> wait_queue; // sessions waiting for board
 
     ev::sig sigint_watcher { loop };
     ev::sig sigterm_watcher { loop };
@@ -31,6 +36,9 @@ private:
     void setup_listener(UnixSocket &sock, std::string sock_name);
 
     Session *find_session_by_ppid(pid_t ppid);
+
+    static Board *find_available_board();
+
 };
 
 #endif // DAEMON_H

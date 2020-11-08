@@ -20,7 +20,11 @@ public:
 
     pid_t get_ppid() const { return ppid; }
 
+    void assign_board(Board *brd);
+
     void new_wrproxy_connection(std::unique_ptr<UnixSocket> s);
+
+    std::string get_status_line() const;
 private:
     friend WrProxy;
 
@@ -52,8 +56,6 @@ private:
     std::unique_ptr<WrProxy> wrproxy;
 
     void close_session();
-
-    Board *find_available_board();
 
     std::string get_username_cred();
 };
