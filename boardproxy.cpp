@@ -10,6 +10,7 @@ using namespace std;
 
 struct {
     bool daemon = false;
+    string sock_dir = "/run/psr-hw";
 } opt;
 
 static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
@@ -17,7 +18,10 @@ static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
     switch (key) {
     case 'd':
         opt.daemon = true;
-	    break;
+        break;
+    case 's':
+        opt.sock_dir = arg;
+        break;
     default:
         return ARGP_ERR_UNKNOWN;
     }
@@ -26,7 +30,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
 
 /* The options we understand. */
 static struct argp_option options[] = {
-    { "daemon", 'd', 0, 0, "Run as central daemon" },
+    { "daemon",   'd', 0,     0, "Run as central daemon" },
+    { "sock-dir", 's', "DIR", 0, "Directory, where to create UNIX sockets" },
     { 0 }
 };
 
@@ -47,14 +52,12 @@ int main(int argc, char *argv[])
 
     spdlog::set_automatic_registration(false);
 
-    string dir("/run/psr-hw");
-
     try {
         if (opt.daemon) {
-            Daemon d(loop, dir);
+            Daemon d(loop, opt.sock_dir);
             loop.run();
         } else {
-            Client c(loop, dir);
+            Client c(loop, opt.sock_dir);
             loop.run();
         }
     }  catch (std::exception &e) {
