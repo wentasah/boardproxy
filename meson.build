@@ -8,7 +8,7 @@ project('boardproxy', [ 'cpp' ],
 version_h = vcs_tag(
 	input : 'version.h.in',
 	output : 'version.h',
-	command : ['git', 'describe', '--always'],
+	command : ['git', 'describe', '--always', '--dirty', '--match=boardproxy-v[0-9]*'],
 )
 
 cxx = meson.get_compiler('cpp')
@@ -34,6 +34,7 @@ executable(
     'log.cpp',
     'session.cpp',
     'unix_socket.cpp',
+    'version.cpp',
     'wrproxy.cpp',
     version_h
   ],

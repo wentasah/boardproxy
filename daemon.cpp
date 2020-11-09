@@ -4,6 +4,7 @@
 #include <sys/un.h>
 #include <err.h>
 #include <unistd.h>
+#include "version.hpp"
 #include "debug.hpp"
 #include "daemon.hpp"
 #include "boards.hpp"
@@ -31,6 +32,8 @@ void Daemon::setup_listener(UnixSocket &sock, std::string sock_name)
 Daemon::Daemon(ev::loop_ref &io, std::string sock_dir)
     : loop(io)
 {
+    logger->info("boardproxy version {}", boardproxy_version);
+
     sigint_watcher.set<Daemon, &Daemon::on_signal>(this);
     sigint_watcher.start(SIGINT);
     sigterm_watcher.set<Daemon, &Daemon::on_signal>(this);
