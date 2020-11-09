@@ -36,6 +36,11 @@ Session::~Session()
 {
     if (board)
         board->release();
+
+    ::close(fd_in);
+    ::close(fd_out);
+    ::close(fd_err);
+
     logger->info("Closing session ({})", username_cred);
 }
 

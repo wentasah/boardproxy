@@ -47,7 +47,7 @@ private:
     Board *board = nullptr;
 
     // Data from the client
-    int fd_in, fd_out, fd_err; // file descriptors
+    int fd_in = -1, fd_out = -1, fd_err = -1; // file descriptors
     pid_t ppid;
     std::string username_cred, username;
 
