@@ -27,6 +27,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
     case 's':
         opt.sock_dir = arg;
         break;
+    case ARGP_KEY_END:
+        if (opt.daemon && !opt.name.empty())
+            argp_error(argp_state, "--name is not allowed with --daemon");
     default:
         return ARGP_ERR_UNKNOWN;
     }
