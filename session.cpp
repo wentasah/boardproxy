@@ -77,10 +77,13 @@ void Session::on_data_from_client(ev::io &w, int revents)
     msg.msg_controllen = sizeof(u.buf);
 
     ssize_t ret = ::recvmsg(w.fd, &msg, 0);
+    if (ret == -1) {
+        logger->info("Client recvmsg error: {}", strerror(errno));
+        return close_session();
+    }
     if (ret == 0) {
         logger->info("Client closed connection");
-        close_session();
-        return;
+        return close_session();
     }
     proto::header h;
     if (ret < ssize_t(sizeof(h))) {
