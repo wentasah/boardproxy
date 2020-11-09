@@ -78,7 +78,7 @@ void Session::on_data_from_client(ev::io &w, int revents)
 
     ssize_t ret = ::recvmsg(w.fd, &msg, 0);
     if (ret == -1) {
-        logger->info("Client recvmsg error: {}", strerror(errno));
+        logger->error("Client recvmsg error: {}", strerror(errno));
         return close_session();
     }
     if (ret == 0) {
