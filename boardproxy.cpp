@@ -4,6 +4,7 @@
 #include "daemon.hpp"
 #include "client.hpp"
 #include "log.hpp"
+#include <spdlog/cfg/env.h>
 #include "util.hpp"
 
 using namespace std;
@@ -55,6 +56,7 @@ int main(int argc, char *argv[])
 
     ev::default_loop loop;
 
+    spdlog::cfg::load_env_levels();
     spdlog::set_automatic_registration(false);
 
     try {
