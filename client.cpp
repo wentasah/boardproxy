@@ -7,7 +7,7 @@
 #include "protocol.hpp"
 
 
-Client::Client(ev::loop_ref loop, std::string sock_dir)
+Client::Client(ev::loop_ref loop, std::string sock_dir, std::string username)
     : socket(loop, UnixSocket::type::seqpacket)
 {
     std::cout << "Welcome to boardproxy" << std::endl;
@@ -15,7 +15,7 @@ Client::Client(ev::loop_ref loop, std::string sock_dir)
     socket.watcher.set<Client, &Client::on_data_from_daemon>(this);
     socket.watcher.start();
 
-    send_setup();
+    send_setup(username);
 }
 
 Client::~Client()
@@ -32,13 +32,13 @@ void Client::on_data_from_daemon(ev::io &w, int revents)
     //logger->error("Client read error: {}", strerror(ENOSYS));
 }
 
-void Client::send_setup()
+void Client::send_setup(const std::string &username)
 {
     // Send stdin/out/err to the daemon so that it can run the proxied
     // process on them
     int myfds[3] = { STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO };
     // Also send addition data, needed by the daemon
-    proto::setup data(getppid());
+    proto::setup data(getppid(), username);
 
     struct msghdr msg = { 0 };
     struct cmsghdr *cmsg;

@@ -10,7 +10,7 @@
 class Client
 {
 public:
-    Client(ev::loop_ref loop, std::string sock_dir);
+    Client(ev::loop_ref loop, std::string sock_dir, std::string username);
     ~Client();
 
 private:
@@ -19,7 +19,7 @@ private:
 
     void on_data_from_daemon(ev::io &w, int revents);
 
-    void send_setup();
+    void send_setup(const std::string &username);
 };
 
 #endif // CLIENT_HPP

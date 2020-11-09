@@ -10,6 +10,7 @@ using namespace std;
 
 struct {
     bool daemon = false;
+    string name;
     string sock_dir = "/run/psr-hw";
 } opt;
 
@@ -18,6 +19,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
     switch (key) {
     case 'd':
         opt.daemon = true;
+        break;
+    case 'n':
+        opt.name = arg;
         break;
     case 's':
         opt.sock_dir = arg;
@@ -31,6 +35,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
 /* The options we understand. */
 static struct argp_option options[] = {
     { "daemon",   'd', 0,     0, "Run as central daemon" },
+    { "name",     'n', "NAME",0, "Client username (useful if multiple users share one UNIX account)" },
     { "sock-dir", 's', "DIR", 0, "Directory, where to create UNIX sockets" },
     { 0 }
 };
@@ -57,7 +62,7 @@ int main(int argc, char *argv[])
             Daemon d(loop, opt.sock_dir);
             loop.run();
         } else {
-            Client c(loop, opt.sock_dir);
+            Client c(loop, opt.sock_dir, opt.name);
             loop.run();
         }
     }  catch (std::exception &e) {
