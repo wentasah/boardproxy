@@ -7,6 +7,7 @@
 #include <boost/program_options/parsers.hpp>
 #include <cstdio>
 #include <fmt/format.h>
+#include <fmt/chrono.h>
 #include "session.hpp"
 #include "debug.hpp"
 #include "daemon.hpp"
@@ -23,6 +24,7 @@ Session::Session(ev::loop_ref loop, Daemon &daemon, std::unique_ptr<UnixSocket> 
     , loop(loop)
     , client(std::move(socket))
     , username_cred(get_username_cred())
+    , session_since(chrono::system_clock::to_time_t(chrono::system_clock::now()))
 {
     logger->info("New session ({})", username_cred);
 
@@ -45,9 +47,10 @@ void Session::new_wrproxy_connection(std::unique_ptr<UnixSocket> s)
 
 string Session::get_status_line() const
 {
-    return fmt::format(FMT_STRING("{:10s} {:15s}"),
+    return fmt::format(("{:10s} {:15s} {:%c}"),
                        username_cred,
-                       board ? board->ip_address : "waiting");
+                       board ? board->ip_address : "waiting",
+                       fmt::localtime(board ? board_since : session_since));
 }
 
 void Session::on_data_from_client(ev::io &w, int revents)
@@ -143,6 +146,7 @@ void Session::assign_board(Board *brd)
 {
     if (brd) {
         board = brd;
+        board_since = chrono::system_clock::to_time_t(chrono::system_clock::now());
         board->acquire(this);
         logger->info("Associated with board {}", board->ip_address);
         dprintf(fd_err, "Connecting to board %s\n", board->ip_address.c_str());

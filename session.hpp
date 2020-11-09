@@ -6,6 +6,7 @@
 #include <array>
 #include <ev++.h>
 #include <spdlog/logger.h>
+#include <ctime>
 #include "protocol.hpp"
 #include "unix_socket.hpp"
 #include "board.hpp"
@@ -48,6 +49,8 @@ private:
     std::array<char, 65536> buffer;
     void on_data_from_client(ev::io &w, int revents);
     void on_setup_msg(struct msghdr msg);
+
+    std::time_t session_since, board_since;
 
     ev::child child_watcher { loop };
     void start_process();
