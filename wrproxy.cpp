@@ -35,6 +35,8 @@ WrProxy::WrProxy(Session &session, std::shared_ptr<spdlog::logger> logger, std::
 WrProxy::~WrProxy()
 {
     logger->info("wrproxy: End of connection");
+    target.stop();
+    ::close(target.fd);
 }
 
 void WrProxy::on_client_data(ev::io &w, int revents)
