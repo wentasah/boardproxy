@@ -16,10 +16,13 @@ class WrProxy;
 
 class Session {
 public:
+    enum class status { created, awaiting_board, has_board };
+
     Session(ev::loop_ref loop, Daemon &daemon, std::unique_ptr<UnixSocket> socket);
     ~Session();
 
     pid_t get_ppid() const { return ppid; }
+    enum status get_status() const { return status; }
 
     void assign_board(Board *brd);
 
@@ -31,6 +34,8 @@ private:
 
     static uint64_t counter;
     const uint64_t id = { counter++ };
+
+    enum status status = status::created;
 
     std::shared_ptr<spdlog::logger> logger;
 

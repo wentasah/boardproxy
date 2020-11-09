@@ -142,6 +142,7 @@ void Session::on_setup_msg(struct msghdr msg)
 
     switch (s->cmd) {
     case setup::command::connect:
+        status = status::awaiting_board;
         // Call this->assign_board with either a board or nullptr
         daemon.assign_board(this);
         break;
@@ -154,6 +155,7 @@ void Session::on_setup_msg(struct msghdr msg)
 void Session::assign_board(Board *brd)
 {
     if (brd) {
+        status = status::has_board;
         board = brd;
         board_since = chrono::system_clock::to_time_t(chrono::system_clock::now());
         board->acquire(this);

@@ -113,8 +113,10 @@ void Daemon::close_session(Session *session)
 void Daemon::print_status(int fd)
 {
     for (const Session &sess: sessions) {
-        string str = sess.get_status_line();
-        dprintf(fd, "%s\n", str.c_str());
+        if (sess.get_status() != Session::status::created) {
+            string str = sess.get_status_line();
+            dprintf(fd, "%s\n", str.c_str());
+        }
     }
 }
 
