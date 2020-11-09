@@ -207,6 +207,7 @@ void Session::start_process()
     close(fd_in);
     close(fd_out);
     close(fd_err);
+    fd_in = fd_out = fd_err = -1;
     child_watcher.set<Session, &Session::on_process_exit>(this);
     child_watcher.start(pid);
 }
