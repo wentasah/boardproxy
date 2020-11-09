@@ -140,8 +140,15 @@ void Session::on_setup_msg(struct msghdr msg)
     logger->debug("Setting up: ppid={}, username={}",
                   ppid, username);
 
-    // Call this->assign_board either with a board or nullptr
-    daemon.assign_board(this);
+    switch (s->cmd) {
+    case setup::command::connect:
+        // Call this->assign_board with either a board or nullptr
+        daemon.assign_board(this);
+        break;
+    case setup::command::list_sessions:
+        daemon.print_status(fd_out);
+        return close_session();
+    };
 }
 
 void Session::assign_board(Board *brd)

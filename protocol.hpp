@@ -25,12 +25,20 @@ struct header {
 // this message ancillary data with client's stdin/out/err file
 // descriptors.
 struct setup : header {
+    using command_t = enum class command {
+        connect,
+        list_sessions,
+    };
+
+    command_t cmd;
     pid_t ppid;
     char username[32] = { 0 };
 
-    setup(pid_t ppid,
+    setup(command_t command,
+          pid_t ppid,
           const std::string user)
         : header(msg_type::setup, sizeof(*this))
+        , cmd(command)
         , ppid(ppid)
     {
         strncpy(username, user.c_str(), sizeof(username) - 1);

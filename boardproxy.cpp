@@ -13,6 +13,7 @@ struct {
     bool daemon = false;
     string name;
     string sock_dir = "/run/psr-hw";
+    bool list_sessions = false;
 } opt;
 
 static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
@@ -20,6 +21,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
     switch (key) {
     case 'd':
         opt.daemon = true;
+        break;
+    case 'l':
+        opt.list_sessions = true;
         break;
     case 'n':
         opt.name = arg;
@@ -30,6 +34,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
     case ARGP_KEY_END:
         if (opt.daemon && !opt.name.empty())
             argp_error(argp_state, "--name is not allowed with --daemon");
+        if (opt.daemon && opt.list_sessions)
+            argp_error(argp_state, "--list-sessions is not allowed with --daemon");
     default:
         return ARGP_ERR_UNKNOWN;
     }
@@ -41,6 +47,7 @@ static struct argp_option options[] = {
     { "daemon",   'd', 0,     0, "Run as central daemon" },
     { "name",     'n', "NAME",0, "Client username (useful if multiple users share one UNIX account)" },
     { "sock-dir", 's', "DIR", 0, "Directory, where to create UNIX sockets" },
+    { "list-sessions", 'l',  0, 0, "List all sessions "},
     { 0 }
 };
 
@@ -67,7 +74,10 @@ int main(int argc, char *argv[])
             Daemon d(loop, opt.sock_dir);
             loop.run();
         } else {
-            Client c(loop, opt.sock_dir, opt.name);
+            proto::setup::command_t command = proto::setup::command::connect;
+            if (opt.list_sessions)
+                command = proto::setup::command::list_sessions;
+            Client c(loop, opt.sock_dir, command, opt.name);
             loop.run();
         }
     }  catch (std::exception &e) {

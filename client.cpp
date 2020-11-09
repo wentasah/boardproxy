@@ -8,16 +8,19 @@
 
 using namespace std;
 
-Client::Client(ev::loop_ref loop, std::string sock_dir, std::string username)
+Client::Client(ev::loop_ref loop, std::string sock_dir,
+               proto::setup::command_t command,
+               std::string username)
     : socket(loop, UnixSocket::type::seqpacket)
+    , is_connect(command == proto::setup::command::connect)
 {
-    if (isatty(STDOUT_FILENO))
+    if (is_connect && isatty(STDOUT_FILENO))
         std::cout << "Welcome to boardproxy" << std::endl;
     socket.connect(sock_dir + "/boardproxy");
     socket.watcher.set<Client, &Client::on_data_from_daemon>(this);
     socket.watcher.start();
 
-    send_setup(username);
+    send_setup(command, username);
 }
 
 Client::~Client()
@@ -28,18 +31,19 @@ void Client::on_data_from_daemon(ev::io &w, int revents)
 {
     ssize_t ret = ::read(w.fd, &buffer, sizeof(buffer));
     if (ret == 0) {
-        cerr << "Server closed connection" << endl;
+        if (is_connect)
+            cerr << "Server closed connection" << endl;
         w.stop();
     }
 }
 
-void Client::send_setup(const std::string &username)
+void Client::send_setup(proto::setup::command_t command, const std::string &username)
 {
     // Send stdin/out/err to the daemon so that it can run the proxied
     // process on them
     int myfds[3] = { STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO };
     // Also send addition data, needed by the daemon
-    proto::setup data(getppid(), username);
+    proto::setup data(command, getppid(), username);
 
     struct msghdr msg = { 0 };
     struct cmsghdr *cmsg;
