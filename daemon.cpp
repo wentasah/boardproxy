@@ -116,6 +116,11 @@ void Daemon::close_session(Session *session)
             sess->assign_board(board);
         }
     }
+
+    if (client_listener.is_from_systemd && sessions.empty()) {
+        logger->info("No session active");
+        loop.break_loop(); // exit
+    }
 }
 
 void Daemon::print_status(int fd)
