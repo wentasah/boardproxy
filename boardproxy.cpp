@@ -1,6 +1,5 @@
 #include <argp.h>
 #include <ev++.h>
-#include "version.h"
 #include "daemon.hpp"
 #include "client.hpp"
 #include "log.hpp"
@@ -50,8 +49,6 @@ static struct argp_option options[] = {
     { "list-sessions", 'l',  0, 0, "List all sessions "},
     { 0 }
 };
-
-const char * argp_program_version = "boardproxy " GIT_VERSION;
 
 /* Our argp parser. */
 static struct argp argp = {
