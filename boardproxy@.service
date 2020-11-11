@@ -1,0 +1,6 @@
+[Unit]
+Description=BoardProxy daemon (%i)
+
+[Service]
+ExecStart=boardproxy --daemon --sock-dir=/run/%i
+NonBlocking=true

@@ -1,0 +1,11 @@
+[Unit]
+Description=BoardProxy socket (%i)
+
+[Socket]
+ListenSequentialPacket=/run/%i/boardproxy
+
+# Override the following in drop-in snippets (see systemctl edit)
+SocketUser=root
+SocketGroup=root
+SocketMode=0600
+DirectoryMode=0600

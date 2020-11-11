@@ -48,3 +48,14 @@ executable(
   cpp_args : args,
   install : true,
 )
+
+systemd = dependency('systemd')
+
+foreach unit : [ 'boardproxy@.socket', 'boardproxy@.service' ]
+  configure_file(copy : true,
+		 input : unit,
+		 output : unit,
+		 install : true,
+		 install_dir : systemd.get_pkgconfig_variable('systemdsystemunitdir'),
+		)
+endforeach
