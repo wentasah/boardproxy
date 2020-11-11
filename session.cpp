@@ -26,7 +26,7 @@ Session::Session(ev::loop_ref loop, Daemon &daemon, std::unique_ptr<UnixSocket> 
     , loop(loop)
     , session_since(chrono::system_clock::to_time_t(chrono::system_clock::now()))
 {
-    logger->info("New session");
+    logger->debug("Creating session");
 
     client->watcher.set<Session, &Session::on_data_from_client>(this);
     client->watcher.start();
@@ -41,7 +41,10 @@ Session::~Session()
     ::close(fd_out);
     ::close(fd_err);
 
-    logger->info("Closing session");
+    if (status != status::created)
+        logger->info("Closing session");
+    else
+        logger->debug("Destroying session");
 }
 
 void Session::new_wrproxy_connection(std::unique_ptr<UnixSocket> s)
@@ -151,6 +154,7 @@ void Session::on_setup_msg(struct msghdr msg)
     switch (s->cmd) {
     case setup::command::connect:
         status = status::awaiting_board;
+        logger->info("Client connected");
         // Call this->assign_board with either a board or nullptr
         daemon.assign_board(this);
         break;
