@@ -43,6 +43,7 @@ executable(
     spdlog_proj.get_variable('spdlog_dep'),
     cxx.find_library('ev'),
     dependency('boost', modules : [ 'program_options' ]),
+    dependency('libsystemd'),
   ],
   cpp_args : args,
   install : true,

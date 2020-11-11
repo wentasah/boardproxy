@@ -15,15 +15,17 @@ using namespace std;
 template<void (Daemon::*method)(ev::io &w, int)>
 void Daemon::setup_listener(UnixSocket &sock, std::string sock_name)
 {
-    unlink(sock_name.c_str()); // ignore errors
+    if (!sock.is_from_systemd) {
+        unlink(sock_name.c_str()); // ignore errors
 
-    // Temporary hack until we make permissions configurable. It's
-    // safe because on the server, we have tight directory permission.
-    mode_t old_umask = umask(0);
+        // Temporary hack until we make permissions configurable. It's
+        // safe because on the server, we have tight directory permission.
+        mode_t old_umask = umask(0);
 
-    sock.bind(sock_name);
-    umask(old_umask);
-    sock.listen();
+        sock.bind(sock_name);
+        umask(old_umask);
+        sock.listen();
+    }
 
     sock.watcher.set<Daemon, method>(this);
     sock.watcher.start();
@@ -44,7 +46,10 @@ Daemon::Daemon(ev::loop_ref &io, std::string sock_dir)
     setup_listener<&Daemon::on_client_connecting>(client_listener, sock_dir + "/boardproxy");
     setup_listener<&Daemon::on_wrproxy_connecting> (wrproxy_listener,  sock_dir + "/wrproxy");
 
-    logger->info("Listening in {}", sock_dir);
+    if (client_listener.is_from_systemd)
+        logger->info("Activated by systemd, listening in {}", sock_dir);
+    else
+        logger->info("Listening in {}", sock_dir);
 }
 
 Daemon::~Daemon()

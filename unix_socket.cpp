@@ -1,3 +1,4 @@
+#include <systemd/sd-daemon.h>
 #include <fcntl.h>
 #include <errno.h>
 #include <stdio.h>
@@ -10,8 +11,9 @@
 #include <err.h>
 #include "unix_socket.hpp"
 
-UnixSocket::UnixSocket(ev::loop_ref loop, type t)
+UnixSocket::UnixSocket(ev::loop_ref loop, type t, bool allow_socket_activation)
     : watcher(loop)
+    , is_from_systemd(allow_socket_activation && sd_listen_fds(1) > 0)
 {
     int sock_type = SOCK_SEQPACKET;
 
@@ -21,15 +23,26 @@ UnixSocket::UnixSocket(ev::loop_ref loop, type t)
     case type::stream:    sock_type = SOCK_STREAM; break;
     }
 
-    int fd = socket(AF_UNIX, sock_type | SOCK_CLOEXEC, 0);
-    if (fd == -1)
-        throw std::system_error(errno, std::generic_category(), "socket(AF_UNIX)");
+    int fd;
+    if (is_from_systemd) {
+        fd = SD_LISTEN_FDS_START;
+        int ret = sd_is_socket(fd, AF_UNIX, sock_type, 1);
+        if (ret < 0)
+            throw std::system_error(-ret, std::generic_category(), "sd_is_socket");
+        if (ret == 0)
+            throw std::runtime_error("Invalid socket from systemd");
+    } else {
+        fd = socket(AF_UNIX, sock_type | SOCK_CLOEXEC, 0);
+        if (fd == -1)
+                throw std::system_error(errno, std::generic_category(), "socket(AF_UNIX)");
+    }
 
     watcher.set(fd, ev::READ);
 }
 
 UnixSocket::UnixSocket(ev::loop_ref loop, int fd)
     : watcher(loop)
+    , is_from_systemd(false)
 {
     watcher.set(fd, ev::READ);
 }

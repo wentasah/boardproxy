@@ -26,7 +26,7 @@ private:
     ev::sig sigterm_watcher { loop };
     void on_signal(ev::sig &w, int revents);
 
-    UnixSocket client_listener { loop, UnixSocket::type::seqpacket };
+    UnixSocket client_listener { loop, UnixSocket::type::seqpacket, true };
     UnixSocket wrproxy_listener { loop, UnixSocket::type::stream };
 
     void on_client_connecting(ev::io &w, int revents);

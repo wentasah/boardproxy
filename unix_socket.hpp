@@ -10,7 +10,7 @@ class UnixSocket
 public:
     enum class type { seqpacket, stream, datagram };
 
-    UnixSocket(ev::loop_ref loop, type t);
+    UnixSocket(ev::loop_ref loop, type t, bool allow_socket_activation = false);
     ~UnixSocket();
 
     void connect(std::string path);
@@ -25,6 +25,7 @@ public:
     struct ucred peer_cred();
 
     ev::io watcher;
+    const bool is_from_systemd;
 private:
     UnixSocket(ev::loop_ref loop, int fd);
 };
