@@ -17,13 +17,7 @@ void Daemon::setup_listener(UnixSocket &sock, std::string sock_name)
 {
     if (!sock.is_from_systemd) {
         unlink(sock_name.c_str()); // ignore errors
-
-        // Temporary hack until we make permissions configurable. It's
-        // safe because on the server, we have tight directory permission.
-        mode_t old_umask = umask(0);
-
         sock.bind(sock_name);
-        umask(old_umask);
         sock.listen();
     }
 
