@@ -5,7 +5,10 @@ Description=BoardProxy socket (%i)
 ListenSequentialPacket=/run/%i/boardproxy
 
 # Override the following in drop-in snippets (see systemctl edit)
-SocketUser=root
-SocketGroup=root
-SocketMode=0600
-DirectoryMode=0600
+SocketUser=%i
+SocketGroup=%i
+SocketMode=0660
+DirectoryMode=0710
+
+[Install]
+WantedBy=multi-user.target

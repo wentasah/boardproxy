@@ -4,3 +4,8 @@ Description=BoardProxy daemon (%i)
 [Service]
 ExecStart=boardproxy --daemon --sock-dir=/run/%i
 NonBlocking=true
+
+# Override the following in drop-in snippets (see systemctl edit)
+User=%i
+Group=%i
+UMask=007
