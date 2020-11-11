@@ -19,14 +19,14 @@ using namespace std;
 uint64_t Session::counter = 0;
 
 Session::Session(ev::loop_ref loop, Daemon &daemon, std::unique_ptr<UnixSocket> socket)
-    : logger(spdlog::stderr_color_st(fmt::format("session {}", id)))
+    : client(std::move(socket))
+    , username_cred(get_username_cred(*client))
+    , logger(spdlog::stderr_color_st(fmt::format("session {} {}", id, username_cred)))
     , daemon(daemon)
     , loop(loop)
-    , client(std::move(socket))
-    , username_cred(get_username_cred())
     , session_since(chrono::system_clock::to_time_t(chrono::system_clock::now()))
 {
-    logger->info("New session ({})", username_cred);
+    logger->info("New session");
 
     client->watcher.set<Session, &Session::on_data_from_client>(this);
     client->watcher.start();
@@ -41,7 +41,7 @@ Session::~Session()
     ::close(fd_out);
     ::close(fd_err);
 
-    logger->info("Closing session ({})", username_cred);
+    logger->info("Closing session");
 }
 
 void Session::new_wrproxy_connection(std::unique_ptr<UnixSocket> s)
@@ -226,9 +226,9 @@ void Session::close_session()
     daemon.close_session(this);
 }
 
-string Session::get_username_cred()
+string Session::get_username_cred(UnixSocket &client)
 {
-    auto cred = client->peer_cred();
+    auto cred = client.peer_cred();
 
     long bufsize = sysconf(_SC_GETPW_R_SIZE_MAX);
     if (bufsize == -1)          /* Value was indeterminate */
@@ -237,9 +237,9 @@ string Session::get_username_cred()
     struct passwd pwd, *result;
     int err = getpwuid_r(cred.uid, &pwd, buf.data(), buf.size(), &result);
     if (err != 0) {
-        logger->error("getpwuid error: {}", strerror(err));
+        ::logger->error("getpwuid error: {}", strerror(err));
     } else if (result == NULL) {
-        logger->error("No pwd entry for UID {}", cred.uid);
+        ::logger->error("No pwd entry for UID {}", cred.uid);
     } else {
         return result->pw_name;
     }

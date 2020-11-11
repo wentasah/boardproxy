@@ -35,7 +35,11 @@ private:
     static uint64_t counter;
     const uint64_t id = { counter++ };
 
+    std::unique_ptr<UnixSocket> client;
+    std::string username_cred;
+
     enum status status = status::created;
+
 
     std::shared_ptr<spdlog::logger> logger;
 
@@ -43,13 +47,12 @@ private:
 
     ev::loop_ref loop;
 
-    std::unique_ptr<UnixSocket> client;
     Board *board = nullptr;
 
     // Data from the client
     int fd_in = -1, fd_out = -1, fd_err = -1; // file descriptors
     pid_t ppid;
-    std::string username_cred, username;
+    std::string username;
 
     std::array<char, 65536> buffer;
     void on_data_from_client(ev::io &w, int revents);
@@ -65,7 +68,7 @@ private:
 
     void close_session();
 
-    std::string get_username_cred();
+    static std::string get_username_cred(UnixSocket &client);
 };
 
 #endif // CLIENT_H
