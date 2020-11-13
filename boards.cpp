@@ -6,7 +6,7 @@ std::list<Board> boards = {
   { "bash -c 'echo This is board 1; sleep inf'", "127.0.0.1" },
   { "bash -c 'echo This is board 2; sleep inf'", "127.0.0.2" },
 #else
-#define CMD "ssh -t psr-hw@c2c1 sterm -b 2000 -s 115200 /dev/serial/by-id/"
+#define CMD "ssh -t psr-hw@rpi-psr sterm -b 2000 -s 115200 /dev/serial/by-id/"
   { CMD "usb-FTDI_FT230X_Basic_UART_DJ00EM7L-if00-port0", "10.35.95.50" },
   { CMD "usb-FTDI_FT230X_Basic_UART_DJ00ENK1-if00-port0", "10.35.95.51" },
   { CMD "usb-FTDI_FT230X_Basic_UART_DJ00EO5X-if00-port0", "10.35.95.52" },
@@ -17,5 +17,11 @@ std::list<Board> boards = {
   { CMD "usb-FTDI_FT230X_Basic_UART_DN00JRK2-if00-port0", "10.35.95.57" },
   { CMD "usb-FTDI_FT230X_Basic_UART_DN00JU72-if00-port0", "10.35.95.58" },
   { CMD "usb-FTDI_FT230X_Basic_UART_DN00JU7G-if00-port0", "10.35.95.59" },
+//{ CMD "usb-FTDI_FT230X_Basic_UART_DT03LIF2-if00-port0", "10.35.95.60" }, -- broken reset
+  { CMD "usb-FTDI_FT230X_Basic_UART_DJ00EMJK-if00-port0", "10.35.95.61" },
+  { CMD "usb-FTDI_FT230X_Basic_UART_DJ00EMV1-if00-port0", "10.35.95.62" },
+  { CMD "usb-FTDI_FT230X_Basic_UART_DJ00EP9D-if00-port0", "10.35.95.63" },
+  { CMD "usb-FTDI_FT230X_Basic_UART_DJ00EQVU-if00-port0", "10.35.95.64" },
+  { CMD "usb-FTDI_FT230X_Basic_UART_DJ00ERII-if00-port0", "10.35.95.65" },
 #endif
 };
