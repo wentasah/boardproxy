@@ -23,5 +23,6 @@ std::list<Board> boards = {
   { CMD "usb-FTDI_FT230X_Basic_UART_DJ00EP9D-if00-port0", "10.35.95.63" },
   { CMD "usb-FTDI_FT230X_Basic_UART_DJ00EQVU-if00-port0", "10.35.95.64" },
   { CMD "usb-FTDI_FT230X_Basic_UART_DJ00ERII-if00-port0", "10.35.95.65" },
+  { CMD "usb-FTDI_FT230X_Basic_UART_DJ00ERLN-if00-port0", "10.35.95.66" },
 #endif
 };
