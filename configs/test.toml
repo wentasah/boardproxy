@@ -1,3 +1,5 @@
+sock_dir = "/tmp/bp_test"
+
 [boards.1]
 command = "bash -c 'echo This is board 1; sleep inf'"
 ip_address = "127.0.0.1"

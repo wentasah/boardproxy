@@ -39,7 +39,7 @@ Daemon::Daemon(ev::loop_ref &io, std::string sock_dir, std::list<Board> boards)
     if (ret == -1 && errno == EEXIST) {
         // Directory already exists - ignore it
     } else if (ret == -1) {
-        throw std::system_error(errno, std::generic_category(), sock_dir);
+        throw std::system_error(errno, std::generic_category(), "sock_dir " + sock_dir);
     }
 
     setup_listener<&Daemon::on_client_connecting>(client_listener, sock_dir + "/boardproxy");

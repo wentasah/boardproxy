@@ -13,7 +13,7 @@ struct {
     string config;
     bool daemon = false;
     string name;
-    string sock_dir = "/run/psr-hw";
+    string sock_dir;
     bool list_sessions = false;
 } opt;
 
@@ -81,20 +81,18 @@ int main(int argc, char *argv[])
     try {
         Config cfg(opt.config);
 
-        string sock_dir = opt.sock_dir;
-        if (sock_dir.empty())
-            sock_dir = cfg.sock_dir;
+        string sock_dir = !opt.sock_dir.empty() ? opt.sock_dir : cfg.sock_dir;
         if (sock_dir.empty())
             throw runtime_error("sock_dir not specified. Specify it either on command line or in the config file.");
 
         if (opt.daemon) {
-            Daemon d(loop, opt.sock_dir, move(cfg.boards));
+            Daemon d(loop, sock_dir, move(cfg.boards));
             loop.run();
         } else {
             proto::setup::command_t command = proto::setup::command::connect;
             if (opt.list_sessions)
                 command = proto::setup::command::list_sessions;
-            Client c(loop, opt.sock_dir, command, opt.name);
+            Client c(loop, sock_dir, command, opt.name);
             loop.run();
         }
     }  catch (std::exception &e) {

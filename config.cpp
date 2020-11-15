@@ -54,6 +54,10 @@ Config::Config(string filename)
 
         const auto command_template = cfg["command_template"].value<string>();
 
+        auto sd = cfg["sock_dir"].value<string>();
+        if (sd)
+            sock_dir = *sd;
+
         const auto boards = cfg["boards"].as_table();
         if (!boards)
             throw runtime_error(filename + ": boards is not TOML table");
