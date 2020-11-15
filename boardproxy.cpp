@@ -48,11 +48,11 @@ static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
 
 /* The options we understand. */
 static struct argp_option options[] = {
-    { "config",   'c', "FILE",0, "Configuration file" },
-    { "daemon",   'd', 0,     0, "Run as central daemon" },
-    { "name",     'n', "NAME",0, "Client username (useful if multiple users share one UNIX account)" },
-    { "sock-dir", 's', "DIR", 0, "Directory, where to create UNIX sockets" },
-    { "list-sessions", 'l',  0, 0, "List all sessions "},
+    { "config",        'c', "FILE",      0,                   "Configuration file" },
+    { "daemon",        'd', 0,           0,                   "Run as central daemon" },
+    { "name",          'n', "NAME",      0,                   "Client username (useful if multiple users share one UNIX account)" },
+    { "sock-dir",      's', "DIR",       0,                   "Directory, where to create UNIX sockets" },
+    { "list-sessions", 'l',  0,          0,                   "List all sessions" },
     { 0 }
 };
 
