@@ -6,10 +6,11 @@
 #include <ev++.h>
 #include "session.hpp"
 #include "unix_socket.hpp"
+#include "board.hpp"
 
 class Daemon {
 public:
-    Daemon(ev::loop_ref &loop, std::string sock_dir);
+    Daemon(ev::loop_ref &loop, std::string sock_dir, std::list<Board> boards);
     ~Daemon();
     void run();
     void assign_board(Session *session);
@@ -18,6 +19,8 @@ public:
     void print_status(int fd);
 private:
     ev::loop_ref &loop;
+
+    std::list<Board> boards;
 
     std::list<Session> sessions;    // all sessions
     std::list<Session*> wait_queue; // sessions waiting for board
@@ -37,8 +40,7 @@ private:
 
     Session *find_session_by_ppid(pid_t ppid);
 
-    static Board *find_available_board();
-
+    Board *find_available_board();
 };
 
 #endif // DAEMON_H

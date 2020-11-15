@@ -1,10 +1,10 @@
 board.cpp
 board.hpp
 boardproxy.cpp
-boards.cpp
-boards.hpp
 client.cpp
 client.hpp
+config.cpp
+config.hpp
 daemon.cpp
 daemon.hpp
 log.hpp

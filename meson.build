@@ -24,7 +24,7 @@ executable(
     'boardproxy.cpp',
 
     'board.cpp',
-    'boards.cpp',
+    'config.cpp',
     'client.cpp',
     'daemon.cpp',
     'log.cpp',

@@ -1,0 +1,7 @@
+[boards.1]
+command = "bash -c 'echo This is board 1; sleep inf'"
+ip_address = "127.0.0.1"
+
+[boards.2]
+command = "bash -c 'echo This is board 2; sleep inf'"
+ip_address = "127.0.0.2"

@@ -7,7 +7,6 @@
 #include "version.hpp"
 #include "debug.hpp"
 #include "daemon.hpp"
-#include "boards.hpp"
 #include "log.hpp"
 
 using namespace std;
@@ -25,8 +24,9 @@ void Daemon::setup_listener(UnixSocket &sock, std::string sock_name)
     sock.watcher.start();
 }
 
-Daemon::Daemon(ev::loop_ref &io, std::string sock_dir)
+Daemon::Daemon(ev::loop_ref &io, std::string sock_dir, std::list<Board> boards)
     : loop(io)
+    , boards(move(boards))
 {
     logger->info("boardproxy version {}", boardproxy_version);
 

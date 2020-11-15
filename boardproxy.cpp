@@ -5,10 +5,12 @@
 #include "log.hpp"
 #include <spdlog/cfg/env.h>
 #include "util.hpp"
+#include "config.hpp"
 
 using namespace std;
 
 struct {
+    string config;
     bool daemon = false;
     string name;
     string sock_dir = "/run/psr-hw";
@@ -18,6 +20,9 @@ struct {
 static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
 {
     switch (key) {
+    case 'c':
+        opt.config = arg;
+        break;
     case 'd':
         opt.daemon = true;
         break;
@@ -43,6 +48,7 @@ static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
 
 /* The options we understand. */
 static struct argp_option options[] = {
+    { "config",   'c', "FILE",0, "Configuration file" },
     { "daemon",   'd', 0,     0, "Run as central daemon" },
     { "name",     'n', "NAME",0, "Client username (useful if multiple users share one UNIX account)" },
     { "sock-dir", 's', "DIR", 0, "Directory, where to create UNIX sockets" },
@@ -67,8 +73,16 @@ int main(int argc, char *argv[])
     spdlog::set_automatic_registration(false);
 
     try {
+        Config cfg(opt.config);
+
+        string sock_dir = opt.sock_dir;
+        if (sock_dir.empty())
+            sock_dir = cfg.sock_dir;
+        if (sock_dir.empty())
+            throw runtime_error("sock_dir not specified. Specify it either via --sock-dir or in the config file.");
+
         if (opt.daemon) {
-            Daemon d(loop, opt.sock_dir);
+            Daemon d(loop, opt.sock_dir, move(cfg.boards));
             loop.run();
         } else {
             proto::setup::command_t command = proto::setup::command::connect;
