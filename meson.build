@@ -18,10 +18,6 @@ fmt_proj = subproject('fmt')
 
 args = []
 
-if get_option('local_test')
-  args += '-DLOCAL_TEST'
-endif
-
 executable(
   'boardproxy',
   [
