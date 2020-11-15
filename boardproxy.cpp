@@ -35,6 +35,12 @@ static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
     case 's':
         opt.sock_dir = arg;
         break;
+    case ARGP_KEY_ARG:
+        if (argp_state->arg_num == 0)
+            opt.sock_dir = arg;
+        else
+            return ARGP_ERR_UNKNOWN;
+        break;
     case ARGP_KEY_END:
         if (opt.daemon && !opt.name.empty())
             argp_error(argp_state, "--name is not allowed with --daemon");
@@ -51,14 +57,14 @@ static struct argp_option options[] = {
     { "config",        'c', "FILE",      0,                   "Configuration file" },
     { "daemon",        'd', 0,           0,                   "Run as central daemon" },
     { "name",          'n', "NAME",      0,                   "Client username (useful if multiple users share one UNIX account)" },
-    { "sock-dir",      's', "DIR",       0,                   "Directory, where to create UNIX sockets" },
+    { "sock-dir",      's', "DIR",       OPTION_HIDDEN,       "Directory, where to create UNIX sockets (deprecated)" },
     { "list-sessions", 'l',  0,          0,                   "List all sessions" },
     { 0 }
 };
 
 /* Our argp parser. */
 static struct argp argp = {
-    options, parse_opt, 0,
+    options, parse_opt, "[SOCK_DIR]",
 
     "PSR boardproxy ... TBD"
 };
@@ -79,7 +85,7 @@ int main(int argc, char *argv[])
         if (sock_dir.empty())
             sock_dir = cfg.sock_dir;
         if (sock_dir.empty())
-            throw runtime_error("sock_dir not specified. Specify it either via --sock-dir or in the config file.");
+            throw runtime_error("sock_dir not specified. Specify it either on command line or in the config file.");
 
         if (opt.daemon) {
             Daemon d(loop, opt.sock_dir, move(cfg.boards));

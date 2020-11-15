@@ -35,7 +35,12 @@ Daemon::Daemon(ev::loop_ref &io, std::string sock_dir, std::list<Board> boards)
     sigterm_watcher.set<Daemon, &Daemon::on_signal>(this);
     sigterm_watcher.start(SIGTERM);
 
-    mkdir(sock_dir.c_str(), S_IRWXU | S_IRWXG); // ignore erros
+    int ret = mkdir(sock_dir.c_str(), S_IRWXU | S_IRWXG);
+    if (ret == -1 && errno == EEXIST) {
+        // Directory already exists - ignore it
+    } else if (ret == -1) {
+        throw std::system_error(errno, std::generic_category(), sock_dir);
+    }
 
     setup_listener<&Daemon::on_client_connecting>(client_listener, sock_dir + "/boardproxy");
     setup_listener<&Daemon::on_wrproxy_connecting> (wrproxy_listener,  sock_dir + "/wrproxy");
