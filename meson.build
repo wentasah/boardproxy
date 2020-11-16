@@ -8,7 +8,7 @@ project('boardproxy', [ 'cpp' ],
 version_h = vcs_tag(
 	input : 'version.h.in',
 	output : 'version.h',
-	command : ['sh', '-c', 'git describe --always --dirty --match="boardproxy-v[0-9]*" | sed -e "s/^boardproxy-v//"'],
+	command : ['sh', '-c', 'git describe --always --dirty --match="v[0-9]*" | sed -e "s/^v//"'],
 )
 
 cxx = meson.get_compiler('cpp')
