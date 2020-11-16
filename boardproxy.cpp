@@ -22,7 +22,7 @@ struct {
 static int handle_ssh_command(const string command)
 {
     if (command == "set-authorized-keys") {
-        int ret = system("umask 077 && cd && mkdir -p .ssh && "
+        int ret = system("umask 077 && cd && mkdir -m 700 -p .ssh && "
                          "f=$(mktemp .ssh/authorized_keys.XXXXXX); cat > $f && "
                          "mv --backup=numbered $f .ssh/authorized_keys");
         if (ret == -1)
