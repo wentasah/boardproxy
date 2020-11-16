@@ -1,5 +1,6 @@
 #include <argp.h>
 #include <ev++.h>
+#include <err.h>
 #include "daemon.hpp"
 #include "client.hpp"
 #include "log.hpp"
@@ -15,7 +16,27 @@ struct {
     string name;
     string sock_dir;
     bool list_sessions = false;
+    bool allow_set_authorized_keys = false;
 } opt;
+
+static int handle_ssh_command(const string command)
+{
+    if (command == "set-authorized-keys") {
+        int ret = system("umask 077 && cd && mkdir -p .ssh && "
+                         "f=$(mktemp .ssh/authorized_keys.XXXXXX); cat > $f && "
+                         "mv --backup=numbered $f .ssh/authorized_keys");
+        if (ret == -1)
+            err(1, "set-keys");
+        return ret;
+    } else {
+        warnx("Unsupported command: %s", command.c_str());
+        return 1;
+    }
+}
+
+enum {
+    OPT_ALLOW_SET_AUTHORIZED_KEYS = 1000,
+};
 
 static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
 {
@@ -35,6 +56,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
     case 's':
         opt.sock_dir = arg;
         break;
+    case OPT_ALLOW_SET_AUTHORIZED_KEYS:
+        opt.allow_set_authorized_keys = true;
+        break;
     case ARGP_KEY_ARG:
         if (argp_state->arg_num == 0)
             opt.sock_dir = arg;
@@ -46,6 +70,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
             argp_error(argp_state, "--name is not allowed with --daemon");
         if (opt.daemon && opt.list_sessions)
             argp_error(argp_state, "--list-sessions is not allowed with --daemon");
+        if (opt.allow_set_authorized_keys && opt.daemon)
+            argp_error(argp_state, "--allow_set_authorized_keys is not allowed with --daemon");
     default:
         return ARGP_ERR_UNKNOWN;
     }
@@ -54,6 +80,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
 
 /* The options we understand. */
 static struct argp_option options[] = {
+    { "allow-set-authorized-keys", OPT_ALLOW_SET_AUTHORIZED_KEYS, 0, 0,
+      "Allow set-authorized-keys subcommand to (re)write ~/.ssh/authorized_keys file" },
     { "config",        'c', "FILE",      0,                   "Configuration file" },
     { "daemon",        'd', 0,           0,                   "Run as central daemon" },
     { "name",          'n', "NAME",      0,                   "Client username (useful if multiple users share one UNIX account)" },
@@ -77,6 +105,12 @@ int main(int argc, char *argv[])
 
     spdlog::cfg::load_env_levels();
     spdlog::set_automatic_registration(false);
+
+    if (opt.allow_set_authorized_keys) {
+        const char *ssh_original_command = getenv("SSH_ORIGINAL_COMMAND");
+        if (ssh_original_command)
+            return handle_ssh_command(ssh_original_command);
+    }
 
     try {
         Config cfg(opt.config);
