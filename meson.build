@@ -29,6 +29,7 @@ executable(
     'daemon.cpp',
     'log.cpp',
     'session.cpp',
+    'tcpproxy.cpp',
     'unix_socket.cpp',
     'version.cpp',
     'wrproxy.cpp',

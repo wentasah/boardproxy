@@ -13,6 +13,7 @@
 #include "daemon.hpp"
 #include "log.hpp"
 #include "wrproxy.hpp"
+#include "tcpproxy.hpp"
 
 using namespace std;
 
@@ -51,6 +52,11 @@ void Session::new_wrproxy_connection(std::unique_ptr<UnixSocket> s)
 {
     wrproxy.reset(); // Deallocate old proxy (if any)
     wrproxy = make_unique<WrProxy>(*this, logger, move(s), board->ip_address);
+}
+
+void Session::new_www_connection(std::unique_ptr<UnixSocket> s)
+{
+    proxies.push_back(make_unique<TcpProxy>(*this, logger, move(s), 80));
 }
 
 string Session::get_status_line() const

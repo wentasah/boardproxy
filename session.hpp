@@ -7,12 +7,14 @@
 #include <ev++.h>
 #include <spdlog/logger.h>
 #include <ctime>
+#include <list>
 #include "protocol.hpp"
 #include "unix_socket.hpp"
 #include "board.hpp"
 
 class Daemon;
 class WrProxy;
+class TcpProxy;
 
 class Session {
 public:
@@ -27,10 +29,12 @@ public:
     void assign_board(Board *brd);
 
     void new_wrproxy_connection(std::unique_ptr<UnixSocket> s);
+    void new_www_connection(std::unique_ptr<UnixSocket> s);
 
     std::string get_status_line() const;
 private:
     friend WrProxy;
+    friend TcpProxy;
 
     static uint64_t counter;
     const uint64_t id = { counter++ };
@@ -65,6 +69,8 @@ private:
     void on_process_exit(ev::child &w, int revents);
 
     std::unique_ptr<WrProxy> wrproxy;
+    std::list<std::unique_ptr<TcpProxy>> proxies;
+    uint64_t proxy_cnt = 0;
 
     void close_session();
 

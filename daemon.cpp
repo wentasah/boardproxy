@@ -44,6 +44,7 @@ Daemon::Daemon(ev::loop_ref &io, std::string sock_dir, std::list<Board> boards)
 
     setup_listener<&Daemon::on_client_connecting>(client_listener, sock_dir + "/boardproxy");
     setup_listener<&Daemon::on_wrproxy_connecting> (wrproxy_listener,  sock_dir + "/wrproxy");
+    setup_listener<&Daemon::on_www_connecting>(www_listener,  sock_dir + "/www");
 
     if (client_listener.is_from_systemd)
         logger->info("Activated by systemd, listening in {}", sock_dir);
@@ -81,6 +82,18 @@ void Daemon::on_wrproxy_connecting(ev::io &w, int revents)
         s->new_wrproxy_connection(std::move(socket));
     } else {
         logger->error("Cannot find session for wrproxy connection from pid {}", cred.pid);
+    }
+}
+
+void Daemon::on_www_connecting(ev::io &w, int revents)
+{
+    auto socket = www_listener.accept();
+    struct ucred cred = socket->peer_cred();
+    Session *s = find_session_by_ppid(cred.pid);
+    if (s) {
+        s->new_www_connection(std::move(socket));
+    } else {
+        logger->error("Cannot find session for www connection from pid {}", cred.pid);
     }
 }
 
