@@ -45,10 +45,10 @@ void WrProxy::on_client_data(ev::io &w, int revents)
 
     int ret = ::read(w.fd, buf.data() + buf.size(), buf.capacity() - buf.size());
     if (ret == -1) {
-        logger->error("wrproxy: client read error {}", strerror(errno));
+        logger->error("wrproxy: client read error: {}", strerror(errno));
         return close();
     } else if (ret == 0) {
-        logger->info("wrproxy: client closed the connection", strerror(errno));
+        logger->info("wrproxy: client closed the connection");
         return close();
     }
     buf.resize(buf.size() + ret);
@@ -83,10 +83,10 @@ void WrProxy::on_target_data(ev::io &w, int revents)
 
     int ret = ::read(w.fd, buf.data(), buf.size());
     if (ret == -1) {
-        logger->error("wrproxy: target read error {}", strerror(errno));
+        logger->error("wrproxy: target read error: {}", strerror(errno));
         return close();
     } else if (ret == 0) {
-        logger->info("wrproxy: target closed the connection???", strerror(errno));
+        logger->info("wrproxy: target closed the connection???");
         return close();
     }
     logger->trace("wrproxy: target sent {} bytes", ret);
@@ -122,7 +122,7 @@ void WrProxy::parse_command()
         // immediately return, because handle_connect could have called close()
         return handle_connect(cmd);
     } else {
-        return fail(fmt::format("Unsupported command {}", command));
+        return fail(fmt::format("Unsupported command: {}", command));
     }
 }
 
