@@ -8,10 +8,11 @@ class Session;
 class Board
 {
 public:
+    const std::string id;
     const std::string command;
     const std::string ip_address;
 
-    Board(std::string command, std::string ip_address);
+    Board(std::string id, std::string command, std::string ip_address);
 
     bool is_available() { return owner == nullptr; }
 

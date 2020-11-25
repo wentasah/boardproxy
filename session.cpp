@@ -177,8 +177,8 @@ void Session::assign_board(Board *brd)
         board = brd;
         board_since = chrono::system_clock::to_time_t(chrono::system_clock::now());
         board->acquire(this);
-        logger->info("Associated with board {}", board->ip_address);
-        dprintf(fd_err, "Connecting to board %s\n", board->ip_address.c_str());
+        logger->info("Associated with board {} ({})", board->id, board->ip_address);
+        dprintf(fd_err, "Connecting to board %s\n", board->id.c_str());
 
         start_process();
     } else {

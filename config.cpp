@@ -16,7 +16,7 @@ string to_string( const T& value )
     return ss.str();
 }
 
-static Board create_board(const string &command_template, const toml::table &board)
+static Board create_board(const string &id, const string &command_template, const toml::table &board)
 {
     const auto ip_address = board["ip_address"].value<string>();
     if (!ip_address)
@@ -41,7 +41,7 @@ static Board create_board(const string &command_template, const toml::table &boa
         command = command_node.value_or("");
     }
 
-    return Board(command, *ip_address);
+    return Board(id, command, *ip_address);
 }
 
 Config::Config(string filename)
@@ -67,7 +67,7 @@ Config::Config(string filename)
             if (!board)
                 throw runtime_error(filename + ": boards." + k + " is not TOML table (at " + to_string(board->source().begin) + ")");
 
-            this->boards.push_back(create_board(*command_template, *board));
+            this->boards.push_back(create_board(k, *command_template, *board));
         }
     }
     catch (const toml::parse_error& err) {
