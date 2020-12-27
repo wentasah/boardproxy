@@ -88,10 +88,12 @@ void Session::on_data_from_client(ev::io &w, int revents)
     ssize_t ret = ::recvmsg(w.fd, &msg, 0);
     if (ret == -1) {
         logger->error("Client recvmsg error: {}", strerror(errno));
+        client->watcher.stop();
         return close_session();
     }
     if (ret == 0) {
         logger->info("Client closed connection");
+        client->watcher.stop();
         return close_session();
     }
     proto::header h;
@@ -225,15 +227,20 @@ void Session::start_process()
 void Session::on_process_exit(ev::child &w, int revents)
 {
     logger->info("process exits with status {}", WEXITSTATUS(w.rstatus));
+    w.stop();
     close_session();
 }
 
 void Session::close_session()
 {
+    bool can_close = true;
+
     if (child_watcher.is_active()) {
         ::kill(child_watcher.pid, SIGKILL);
+        can_close = false;
     }
-    daemon.close_session(this);
+    if (can_close)
+        daemon.close_session(this);
 }
 
 string Session::get_username_cred(UnixSocket &client)
