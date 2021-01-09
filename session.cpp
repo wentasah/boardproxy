@@ -50,12 +50,20 @@ Session::~Session()
 
 void Session::new_wrproxy_connection(std::unique_ptr<UnixSocket> s)
 {
+    if (this->status != status::has_board) {
+        logger->warn("wrproxy connection without a board");
+        return;
+    }
     wrproxy.reset(); // Deallocate old proxy (if any)
     wrproxy = make_unique<WrProxy>(*this, logger, move(s), board->ip_address);
 }
 
 void Session::new_www_connection(std::unique_ptr<UnixSocket> s)
 {
+    if (this->status != status::has_board) {
+        logger->warn("www connection without a board");
+        return;
+    }
     proxies.push_back(make_unique<TcpProxy>(*this, logger, move(s), 80));
 }
 
