@@ -1,5 +1,9 @@
 
-command_template = "ssh -t psr-hw@rpi-psr sterm -b 2000 -s 115200 /dev/serial/by-id/{serial_id}"
+command_template = '''bash -c "echo \'IP address: {ip_address}, {motor}\'; exec ssh -t psr-hw@rpi-psr sterm -v -b 2000 -s 115200 /dev/serial/by-id/{serial_id}"'''
+
+# Reset the board after the client disconnects
+close_command_template = '''bash -c "echo \"break 2000 exit\" | exec ssh -t psr-hw@rpi-psr sterm -c -s 115200 /dev/serial/by-id/{serial_id}"'''
+
 socket_dir = "/run/psr-hw"
 
 # TODO
@@ -8,20 +12,26 @@ socket_dir = "/run/psr-hw"
 # www = { type = "tcp", port = 80 }
 
 [boards]
-mzapo01 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EM7L-if00-port0", ip_address = "10.35.95.50" }
-mzapo02 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00ENK1-if00-port0", ip_address = "10.35.95.51" }
-mzapo03 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EO5X-if00-port0", ip_address = "10.35.95.52" }
-mzapo04 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EQSO-if00-port0", ip_address = "10.35.95.53" }
-mzapo05 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EREM-if00-port0", ip_address = "10.35.95.54" }
-mzapo06 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00ERUW-if00-port0", ip_address = "10.35.95.55" }
-mzapo07 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00F380-if00-port0", ip_address = "10.35.95.56" }
-mzapo08 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DN00JRK2-if00-port0", ip_address = "10.35.95.57" }
-mzapo09 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DN00JU72-if00-port0", ip_address = "10.35.95.58" }
-mzapo10 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DN00JU7G-if00-port0", ip_address = "10.35.95.59" }
+mzapo01 = { motor = "motor 01", serial_id = "usb-FTDI_FT230X_Basic_UART_DN00JU72-if00-port0", ip_address = "10.35.95.58" }
+mzapo02 = { motor = "motor 02", serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EM7L-if00-port0", ip_address = "10.35.95.50" }
+mzapo03 = { motor = "motor 03", serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00ERUW-if00-port0", ip_address = "10.35.95.55" }
+mzapo04 = { motor = "motor 04", serial_id = "usb-FTDI_FT230X_Basic_UART_DN00JU7G-if00-port0", ip_address = "10.35.95.59" }
+mzapo05 = { motor = "motor 05", serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EQVU-if00-port0", ip_address = "10.35.95.64" }
+mzapo06 = { motor = "motor 06", serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EO5X-if00-port0", ip_address = "10.35.95.52" }
+mzapo07 = { motor = "motor 07", serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00ERLN-if00-port0", ip_address = "10.35.95.66" }
+mzapo08 = { motor = "motor 08", serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00F380-if00-port0", ip_address = "10.35.95.56" }
+mzapo09 = { motor = "motor 09", serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00ENR6-if00-port0", ip_address = "10.35.95.67" }
+mzapo10 = { motor = "motor 10", serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EQSO-if00-port0", ip_address = "10.35.95.53" }
+mzapo11 = { motor = "motor 11", serial_id = "usb-FTDI_FT230X_Basic_UART_DN00JRK2-if00-port0", ip_address = "10.35.95.57" }
+mzapo12 = { motor = "motor 12", serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00ERII-if00-port0", ip_address = "10.35.95.65" }
+mzapo13 = { motor = "motor 13", serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00ENK1-if00-port0", ip_address = "10.35.95.51" }
+mzapo14 = { motor = "motor 14", serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EP9D-if00-port0", ip_address = "10.35.95.63" }
+mzapo15 = { motor = "NO MOTOR", serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EMV1-if00-port0", ip_address = "10.35.95.62" } # PMOD1 not working
+mzapo16 = { motor = "NO MOTOR", serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EMJK-if00-port0", ip_address = "10.35.95.61" }
+mzapo17 = { motor = "NO MOTOR", serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00ES02-if00-port0", ip_address = "10.35.95.68" }
+mzapo18 = { motor = "NO MOTOR, fails to boot :-(", serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EREM-if00-port0", ip_address = "10.35.95.54" } # fails from time to time - make it last
+
+
+# mzapo19 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EMCU-if00-port0", ip_address = "10.35.95.69" } # serial broken - no output
+
 # mzapo11 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DT03LIF2-if00-port0", ip_address = "10.35.95.60" } -- broken reset
-mzapo12 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EMJK-if00-port0", ip_address = "10.35.95.61" }
-mzapo13 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EMV1-if00-port0", ip_address = "10.35.95.62" }
-mzapo14 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EP9D-if00-port0", ip_address = "10.35.95.63" }
-mzapo15 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00EQVU-if00-port0", ip_address = "10.35.95.64" }
-mzapo16 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00ERII-if00-port0", ip_address = "10.35.95.65" }
-mzapo17 = { serial_id = "usb-FTDI_FT230X_Basic_UART_DJ00ERLN-if00-port0", ip_address = "10.35.95.66" }
