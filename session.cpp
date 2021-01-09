@@ -61,8 +61,9 @@ void Session::new_www_connection(std::unique_ptr<UnixSocket> s)
 
 string Session::get_status_line() const
 {
-    return fmt::format(("{:10s} {:15s} {:%c}"),
+    return fmt::format(("{:10s} {:10s} {:15s} {:%c}"),
                        username.empty() ? username_cred : username,
+                       board ? board->id : "",
                        board ? board->ip_address : "waiting",
                        fmt::localtime(board ? board_since : session_since));
 }

@@ -1,9 +1,9 @@
 sock_dir = "/tmp/bp_test"
 
-[boards.1]
+[boards.brd1]
 command = "bash -c 'echo This is board 1; sleep inf'"
 ip_address = "127.0.0.1"
 
-[boards.2]
+[boards.brd2]
 command = "bash -c 'echo This is board 2; sleep inf'"
 ip_address = "127.0.0.2"
