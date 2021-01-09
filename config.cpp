@@ -43,6 +43,7 @@ static string get_board_field(const string key, const string templ, const toml::
 static Board create_board(
         const string &id,
         const string &command_template,
+        const string &close_command_template,
         const toml::table &board)
 {
     const auto ip_address = board["ip_address"].value<string>();
@@ -51,7 +52,8 @@ static Board create_board(
 
     return Board(id,
                  get_board_field("command", command_template, board),
-                 *ip_address);
+                 *ip_address,
+                 get_board_field("close_command", close_command_template, board));
 }
 
 Config::Config(string filename)
@@ -63,6 +65,7 @@ Config::Config(string filename)
         const toml::table cfg = toml::parse_file(filename);
 
         const auto command_template = cfg["command_template"].value_or(""s);
+        const auto close_command_template = cfg["close_command_template"].value_or(""s);
 
         auto sd = cfg["sock_dir"].value<string>();
         if (sd)
@@ -81,6 +84,7 @@ Config::Config(string filename)
                 create_board(
                     key,
                     command_template,
+                    close_command_template,
                     *board));
         }
     }

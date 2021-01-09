@@ -18,7 +18,7 @@ class TcpProxy;
 
 class Session {
 public:
-    enum class status { created, awaiting_board, has_board };
+    enum class status { created, awaiting_board, has_board, closing_board };
 
     Session(ev::loop_ref loop, Daemon &daemon, std::unique_ptr<UnixSocket> socket);
     ~Session();
@@ -67,6 +67,8 @@ private:
     ev::child child_watcher { loop };
     void start_process();
     void on_process_exit(ev::child &w, int revents);
+    void start_close_command();
+    void on_close_command_exit(ev::child &w, int revents);
 
     std::unique_ptr<WrProxy> wrproxy;
     std::list<std::unique_ptr<TcpProxy>> proxies;

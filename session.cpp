@@ -240,16 +240,48 @@ void Session::on_process_exit(ev::child &w, int revents)
     close_session();
 }
 
+void Session::start_close_command()
+{
+    using namespace std;
+
+    logger->info("Starting close command: {}", board->close_command);
+
+    // Prepare command line arguments for exec()
+    auto args = boost::program_options::split_unix(board->close_command);
+    vector<const char*> cargs;
+    transform(begin(args), end(args), back_inserter(cargs), [](auto &a) { return a.c_str(); });
+    cargs.push_back(nullptr);
+
+    pid_t pid = fork();
+    if (pid == -1)
+        throw std::system_error(errno, std::generic_category(), "fork");
+    if (pid == 0) { // child
+        execvp(cargs[0], const_cast<char**>(cargs.data()));
+        throw std::system_error(errno, std::generic_category(), "exec");
+    }
+    child_watcher.set<Session, &Session::on_close_command_exit>(this);
+    child_watcher.start(pid);
+}
+
+void Session::on_close_command_exit(ev::child &w, int revents)
+{
+    logger->info("close command exits with status {}", WEXITSTATUS(w.rstatus));
+    w.stop();
+    close_session();
+}
+
 void Session::close_session()
 {
-    bool can_close = true;
-
-    if (child_watcher.is_active()) {
+    // This implements simple "board closing" state machine
+    if (status == status::has_board && child_watcher.is_active()) {
         ::kill(child_watcher.pid, SIGKILL);
-        can_close = false;
+        return;
+    } else if (status == status::has_board && !board->close_command.empty()) {
+        status = status::closing_board;
+        start_close_command();
+        return;
     }
-    if (can_close)
-        daemon.close_session(this);
+    daemon.close_session(this);
 }
 
 string Session::get_username_cred(UnixSocket &client)

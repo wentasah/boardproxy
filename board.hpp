@@ -11,8 +11,10 @@ public:
     const std::string id;
     const std::string command;
     const std::string ip_address;
+    const std::string close_command;
 
-    Board(std::string id, std::string command, std::string ip_address);
+    Board(std::string id, std::string command, std::string ip_address,
+          std::string close_command);
 
     bool is_available() { return owner == nullptr; }
 
