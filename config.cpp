@@ -16,32 +16,42 @@ string to_string( const T& value )
     return ss.str();
 }
 
-static Board create_board(const string &id, const string &command_template, const toml::table &board)
+static string get_board_field(const string key, const string templ, const toml::table &board)
 {
-    const auto ip_address = board["ip_address"].value<string>();
-    if (!ip_address)
-        throw runtime_error("no or invalid ip_address for board at " + to_string(board.source().begin));
+    string result;
 
-    string command;
+    auto field_node = board[key];
 
-    auto command_node = board["command"];
-    if (command_node.type() == toml::node_type::none) {
-        // No explicit command for the board - use global command_template
+    if (field_node.type() == toml::node_type::none) {
+        // No explicit field for the board - use global field template
         fmt::dynamic_format_arg_store<fmt::format_context> args;
         for (auto [k, v] : board) {
             if (!v.is_string())
                 throw runtime_error("value for " + k + " is not string (at " + to_string(v.source().begin) + ")");
             args.push_back(fmt::arg(k.c_str(), v.value_or("")));
         }
-        command = fmt::vformat(command_template, args);
+        result = fmt::vformat(templ, args);
     } else {
-        // Board has explicit command
-        if (!command_node.is_string())
-            throw runtime_error("command is not a string at " + to_string(board.source()));
-        command = command_node.value_or("");
+        // Board has explicit field
+        if (!field_node.is_string())
+            throw runtime_error(key + " is not a string at " + to_string(board.source()));
+        result = field_node.value_or("");
     }
+    return result;
+}
 
-    return Board(id, command, *ip_address);
+static Board create_board(
+        const string &id,
+        const string &command_template,
+        const toml::table &board)
+{
+    const auto ip_address = board["ip_address"].value<string>();
+    if (!ip_address)
+        throw runtime_error("no or invalid ip_address for board at " + to_string(board.source().begin));
+
+    return Board(id,
+                 get_board_field("command", command_template, board),
+                 *ip_address);
 }
 
 Config::Config(string filename)
@@ -52,7 +62,7 @@ Config::Config(string filename)
     try {
         const toml::table cfg = toml::parse_file(filename);
 
-        const auto command_template = cfg["command_template"].value<string>();
+        const auto command_template = cfg["command_template"].value_or(""s);
 
         auto sd = cfg["sock_dir"].value<string>();
         if (sd)
@@ -62,12 +72,16 @@ Config::Config(string filename)
         if (!boards)
             throw runtime_error(filename + ": boards is not TOML table");
 
-        for (auto [k, v] : *boards) {
-            const auto board = v.as_table();
+        for (auto [key, val] : *boards) {
+            const auto board = val.as_table();
             if (!board)
-                throw runtime_error(filename + ": boards." + k + " is not TOML table (at " + to_string(board->source().begin) + ")");
+                throw runtime_error(filename + ": boards." + key + " is not TOML table (at " + to_string(board->source().begin) + ")");
 
-            this->boards.push_back(create_board(k, *command_template, *board));
+            this->boards.push_back(
+                create_board(
+                    key,
+                    command_template,
+                    *board));
         }
     }
     catch (const toml::parse_error& err) {
