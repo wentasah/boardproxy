@@ -9,6 +9,10 @@
 #include "daemon.hpp"
 #include "log.hpp"
 
+// TODO: Remove from here if possible
+#include "tcpproxy.hpp"
+#include "wrproxy.hpp"
+
 using namespace std;
 
 template<void (Daemon::*method)(ev::io &w, int)>
@@ -43,8 +47,12 @@ Daemon::Daemon(ev::loop_ref &io, std::string sock_dir, std::list<Board> boards)
     }
 
     setup_listener<&Daemon::on_client_connecting>(client_listener, sock_dir + "/boardproxy");
-    setup_listener<&Daemon::on_wrproxy_connecting> (wrproxy_listener,  sock_dir + "/wrproxy");
-    setup_listener<&Daemon::on_www_connecting>(www_listener,  sock_dir + "/www");
+
+    proxy_factories.push_back(make_unique<WrProxyFactory>(loop, "wrproxy"));
+    proxy_factories.push_back(make_unique<TcpProxyFactory>(loop, "www", 80));
+
+    for (auto &factory : proxy_factories)
+        setup_listener<&Daemon::on_socket_connecting>(factory->listener,  sock_dir + "/" + factory->sock_name);
 
     if (client_listener.is_from_systemd)
         logger->info("Activated by systemd, listening in {}", sock_dir);
@@ -73,27 +81,27 @@ void Daemon::on_client_connecting(ev::io &w, int revents)
     sessions.emplace_back(loop, *this, client_listener.accept());
 }
 
-void Daemon::on_wrproxy_connecting(ev::io &w, int revents)
+void Daemon::on_socket_connecting(ev::io &w, int revents)
 {
-    auto socket = wrproxy_listener.accept();
-    struct ucred cred = socket->peer_cred();
-    Session *s = find_session_by_ppid(cred.pid);
-    if (s) {
-        s->new_wrproxy_connection(std::move(socket));
-    } else {
-        logger->error("Cannot find session for wrproxy connection from pid {}", cred.pid);
+    ProxyFactory *factory = nullptr;
+    for (auto &f : proxy_factories) {
+        // TODO: get rid of O(n) complexity
+        if (&(f->listener.watcher) == &w) {
+            factory = f.get();
+            break;
+        }
     }
-}
+    if (!factory)
+        throw std::runtime_error(string("Proxy factory not found in ") + string(__PRETTY_FUNCTION__));
 
-void Daemon::on_www_connecting(ev::io &w, int revents)
-{
-    auto socket = www_listener.accept();
+    auto socket = factory->listener.accept();
     struct ucred cred = socket->peer_cred();
     Session *s = find_session_by_ppid(cred.pid);
     if (s) {
-        s->new_www_connection(std::move(socket));
+        s->new_socket_connection(move(socket), *factory);
     } else {
-        logger->error("Cannot find session for www connection from pid {}", cred.pid);
+        logger->error("Cannot find session for {} connection from pid {}",
+                      factory->sock_name,  cred.pid);
     }
 }
 

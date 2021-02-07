@@ -8,18 +8,19 @@
 #include <spdlog/logger.h>
 #include "unix_socket.hpp"
 #include "util.hpp"
+#include "socket_proxy.hpp"
+#include "proxy_factory.hpp"
 
 class Session;
 
 // Implementatin of (a subset of) WindRiver proxy protocol for
 // connecting WindRiver Workbench IDE to VxWorks targets.
 
-class WrProxy
+class WrProxy : public SocketProxy
 {
 public:
-    WrProxy(Session &session, std::shared_ptr<spdlog::logger> logger,
-            std::unique_ptr<UnixSocket> client_sock, std::string forced_ip);
-    ~WrProxy();
+    WrProxy(Session &session, std::unique_ptr<UnixSocket> client_sock);
+    ~WrProxy() override;
 
 private:
     Session &session;
@@ -42,6 +43,15 @@ private:
     void fail(const FormatString &fmt, const Args &... args);
 
     void close();
+};
+
+class WrProxyFactory : public ProxyFactory {
+public:
+    using ProxyFactory::ProxyFactory;
+    std::unique_ptr<SocketProxy>
+    create(Session &session, std::unique_ptr<UnixSocket> client_sock) override {
+        return std::make_unique<WrProxy>(session, std::move(client_sock));
+    }
 };
 
 #endif // WRPROXY_HPP

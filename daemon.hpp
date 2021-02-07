@@ -7,6 +7,7 @@
 #include "session.hpp"
 #include "unix_socket.hpp"
 #include "board.hpp"
+#include "proxy_factory.hpp"
 
 class Daemon {
 public:
@@ -30,12 +31,11 @@ private:
     void on_signal(ev::sig &w, int revents);
 
     UnixSocket client_listener { loop, UnixSocket::type::seqpacket, true };
-    UnixSocket wrproxy_listener { loop, UnixSocket::type::stream };
-    UnixSocket www_listener { loop, UnixSocket::type::stream };
+    std::list<std::unique_ptr<ProxyFactory>> proxy_factories;
+
 
     void on_client_connecting(ev::io &w, int revents);
-    void on_wrproxy_connecting(ev::io &w, int revents);
-    void on_www_connecting(ev::io &w, int revents);
+    void on_socket_connecting(ev::io &w, int revents);
 
     template<void (Daemon::*method)(ev::io &w, int)>
     void setup_listener(UnixSocket &sock, std::string sock_name);

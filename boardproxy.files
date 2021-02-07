@@ -9,8 +9,11 @@ daemon.cpp
 daemon.hpp
 log.hpp
 protocol.hpp
+proxy_factory.hpp
 session.cpp
 session.hpp
+socket_proxy.cpp
+socket_proxy.hpp
 unix_socket.cpp
 unix_socket.hpp
 util.hpp

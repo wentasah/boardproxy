@@ -11,9 +11,9 @@
 
 using namespace std;
 
-WrProxy::WrProxy(Session &session, std::shared_ptr<spdlog::logger> logger, std::unique_ptr<UnixSocket> client_sock, std::string forced_ip)
+WrProxy::WrProxy(Session &session, std::unique_ptr<UnixSocket> client_sock)
     : session(session)
-    , logger(logger)
+    , logger(session.logger)
     , client(move(client_sock))
     , target(client->watcher.loop)
 {
@@ -199,5 +199,5 @@ void WrProxy::fail(const FormatString &fmt, const Args &... args)
 
 void WrProxy::close()
 {
-    session.wrproxy.reset();
+    return session.proxies.remove_if([&](auto &proxy) { return proxy.get() == this; });
 }

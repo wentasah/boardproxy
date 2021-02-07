@@ -11,6 +11,7 @@
 #include "protocol.hpp"
 #include "unix_socket.hpp"
 #include "board.hpp"
+#include "proxy_factory.hpp"
 
 class Daemon;
 class WrProxy;
@@ -28,8 +29,7 @@ public:
 
     void assign_board(Board *brd);
 
-    void new_wrproxy_connection(std::unique_ptr<UnixSocket> s);
-    void new_www_connection(std::unique_ptr<UnixSocket> s);
+    void new_socket_connection(std::unique_ptr<UnixSocket> s, ProxyFactory &proxy_factory);
 
     std::string get_status_line() const;
 private:
@@ -70,8 +70,7 @@ private:
     void start_close_command();
     void on_close_command_exit(ev::child &w, int revents);
 
-    std::unique_ptr<WrProxy> wrproxy;
-    std::list<std::unique_ptr<TcpProxy>> proxies;
+    std::list<std::unique_ptr<SocketProxy>> proxies;
     uint64_t proxy_cnt = 0;
 
     void close_session();

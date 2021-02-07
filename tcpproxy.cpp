@@ -12,10 +12,10 @@
 
 using namespace std;
 
-TcpProxy::TcpProxy(Session &session, std::shared_ptr<spdlog::logger> logger, std::unique_ptr<UnixSocket> client_sock, uint16_t port)
+TcpProxy::TcpProxy(Session &session, std::unique_ptr<UnixSocket> client_sock, uint16_t port)
     : session(session)
     , id(session.proxy_cnt++)
-    , logger(logger)
+    , logger(session.logger)
     , client(move(client_sock))
     , target(client->watcher.loop)
 {

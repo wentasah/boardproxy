@@ -48,23 +48,13 @@ Session::~Session()
         logger->debug("Destroying session");
 }
 
-void Session::new_wrproxy_connection(std::unique_ptr<UnixSocket> s)
+void Session::new_socket_connection(std::unique_ptr<UnixSocket> s, ProxyFactory &proxy_factory)
 {
     if (this->status != status::has_board) {
-        logger->warn("wrproxy connection without a board");
+        logger->warn("{} connection without a board", proxy_factory.sock_name);
         return;
     }
-    wrproxy.reset(); // Deallocate old proxy (if any)
-    wrproxy = make_unique<WrProxy>(*this, logger, move(s), board->ip_address);
-}
-
-void Session::new_www_connection(std::unique_ptr<UnixSocket> s)
-{
-    if (this->status != status::has_board) {
-        logger->warn("www connection without a board");
-        return;
-    }
-    proxies.push_back(make_unique<TcpProxy>(*this, logger, move(s), 80));
+    proxies.push_back(proxy_factory.create(*this, move(s)));
 }
 
 string Session::get_status_line() const

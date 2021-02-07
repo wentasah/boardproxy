@@ -8,15 +8,17 @@
 #include <spdlog/logger.h>
 #include "unix_socket.hpp"
 #include "util.hpp"
+#include "socket_proxy.hpp"
+#include "proxy_factory.hpp"
 
 class Session;
 
-class TcpProxy
+class TcpProxy : public SocketProxy
 {
 public:
-    TcpProxy(Session &session, std::shared_ptr<spdlog::logger> logger,
+    TcpProxy(Session &session,
              std::unique_ptr<UnixSocket> client_sock, uint16_t port);
-    ~TcpProxy();
+    ~TcpProxy() override;
 
 private:
     Session &session;
@@ -46,5 +48,19 @@ private:
 
     void close();
 };
+
+class TcpProxyFactory : public ProxyFactory {
+public:
+    TcpProxyFactory(ev::loop_ref loop, std::string sock_name, uint16_t port)
+        : ProxyFactory(loop, sock_name), port(port) {}
+
+    std::unique_ptr<SocketProxy>
+    create(Session &session, std::unique_ptr<UnixSocket> client_sock) override {
+        return std::make_unique<TcpProxy>(session, std::move(client_sock), port);
+    }
+private:
+    uint16_t port;
+};
+
 
 #endif // TCPPROXY_HPP
