@@ -56,6 +56,32 @@ static Board create_board(
                  get_board_field("close_command", close_command_template, board));
 }
 
+static std::list<Board> parse_boards(const string& filename, const toml::table cfg)
+{
+    std::list<Board> board_list;
+
+    const auto command_template = cfg["command_template"].value_or(""s);
+    const auto close_command_template = cfg["close_command_template"].value_or(""s);
+
+    const auto boards = cfg["boards"].as_table();
+    if (!boards)
+        throw runtime_error(filename + ": boards is not TOML table");
+
+    for (auto [key, val] : *boards) {
+        const auto board = val.as_table();
+        if (!board)
+            throw runtime_error(filename + ": boards." + key + " is not TOML table (at " + to_string(board->source().begin) + ")");
+
+        board_list.push_back(
+            create_board(
+                key,
+                command_template,
+                close_command_template,
+                *board));
+    }
+    return board_list;
+}
+
 Config::Config(string filename)
 {
     if (filename.empty())
@@ -64,29 +90,11 @@ Config::Config(string filename)
     try {
         const toml::table cfg = toml::parse_file(filename);
 
-        const auto command_template = cfg["command_template"].value_or(""s);
-        const auto close_command_template = cfg["close_command_template"].value_or(""s);
-
         auto sd = cfg["sock_dir"].value<string>();
         if (sd)
             sock_dir = *sd;
 
-        const auto boards = cfg["boards"].as_table();
-        if (!boards)
-            throw runtime_error(filename + ": boards is not TOML table");
-
-        for (auto [key, val] : *boards) {
-            const auto board = val.as_table();
-            if (!board)
-                throw runtime_error(filename + ": boards." + key + " is not TOML table (at " + to_string(board->source().begin) + ")");
-
-            this->boards.push_back(
-                create_board(
-                    key,
-                    command_template,
-                    close_command_template,
-                    *board));
-        }
+        this->boards = parse_boards(filename, cfg);
     }
     catch (const toml::parse_error& err) {
         stringstream msg;
