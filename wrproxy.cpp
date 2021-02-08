@@ -27,12 +27,12 @@ WrProxy::WrProxy(Session &session, std::unique_ptr<UnixSocket> client_sock)
     target.set<WrProxy, &WrProxy::on_target_data>(this);
     target.start();
 
-    logger->info("wrproxy: New connection");
+    info("New connection");
 }
 
 WrProxy::~WrProxy()
 {
-    logger->info("wrproxy: End of connection");
+    info("End of connection");
     target.stop();
     ::close(target.fd);
 }
@@ -46,7 +46,7 @@ void WrProxy::on_client_data(ev::io &w, int revents)
         logger->error("wrproxy: client read error: {}", strerror(errno));
         return close();
     } else if (ret == 0) {
-        logger->info("wrproxy: client closed the connection");
+        info("client closed the connection");
         return close();
     }
     buf.resize(buf.size() + ret);
@@ -84,7 +84,7 @@ void WrProxy::on_target_data(ev::io &w, int revents)
         logger->error("wrproxy: target read error: {}", strerror(errno));
         return close();
     } else if (ret == 0) {
-        logger->info("wrproxy: target closed the connection???");
+        info("target closed the connection???");
         return close();
     }
     logger->trace("wrproxy: target sent {} bytes", ret);
@@ -109,7 +109,7 @@ void WrProxy::parse_command()
         return;
 
     buf.resize(last);
-    logger->info("wrproxy: Received command: {}", buf);
+    info("Received command: {}", buf);
 
     istringstream cmd(buf);
     string command;
@@ -172,7 +172,7 @@ void WrProxy::handle_connect(istringstream &cmd)
         if (ret == -1)
             return fail("connect {}:{}: {}", ip, port, strerror(errno));
 
-        logger->info("wrproxy: connected to {}:{}", ip, port);
+        info("connected to {}:{}", ip, port);
         state = DATA;    // Switch to data mode - commands will no longer be accepted
         buf_c2t.clear(); // clear the rest of EOL characters (e.g. \r\n etc.)
         ret = ::write(client->watcher.fd, "ok\0", 3);
