@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <sstream>
 #include <functional>
+#include <unistd.h>
 #include "session.hpp"
 
 #include "tcpproxy.hpp"

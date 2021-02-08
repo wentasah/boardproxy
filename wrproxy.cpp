@@ -5,6 +5,7 @@
 #include <system_error>
 #include <algorithm>
 #include <sstream>
+#include <unistd.h>
 #include "session.hpp"
 
 #include "wrproxy.hpp"
