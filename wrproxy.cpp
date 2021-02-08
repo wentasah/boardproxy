@@ -13,10 +13,7 @@
 using namespace std;
 
 WrProxy::WrProxy(Session &session, std::unique_ptr<UnixSocket> client_sock)
-    : session(session)
-    , logger(session.logger)
-    , client(move(client_sock))
-    , target(client->watcher.loop)
+    : SocketProxy("wrproxy", session, move(client_sock))
 {
     buf_c2t.reserve(65536);
 
@@ -163,10 +160,10 @@ void WrProxy::handle_connect(istringstream &cmd)
         } catch (...) {
             return fail("Bad port {}", port);
         }
-        if (!session.board)
+        if (!session.get_board())
             return fail("No board assigned");
 
-        auto &ip = session.board->ip_address;
+        auto &ip = session.get_board()->ip_address;
         int ret = inet_aton(ip.c_str(), &addr.sin_addr);
         if (ret == 0)
             return fail("Invalid board IP address: {}", ip);
@@ -189,16 +186,13 @@ void WrProxy::handle_connect(istringstream &cmd)
 template<typename FormatString, typename... Args>
 void WrProxy::fail(const FormatString &fmt, const Args &... args)
 {
+    // First send an error message to wrpoxy client, e.g., WindRiver Workbench
     auto msg = fmt::format(fmt, args...);
-    logger->error("wrproxy: {}", msg);
     string resp = fmt::format("error wrproxy: {}", msg);
     int ret = ::write(client->watcher.fd, resp.c_str(), resp.size() + 1 /* zero delimitter */);
     if (ret == -1)
         logger->error("wrproxy: fail: write error: {}", strerror(errno));
-    close();
-}
 
-void WrProxy::close()
-{
-    return session.proxies.remove_if([&](auto &proxy) { return proxy.get() == this; });
+    // Then log the error and close the proxy
+    return SocketProxy::fail(msg);
 }

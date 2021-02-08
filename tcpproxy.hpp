@@ -11,8 +11,6 @@
 #include "socket_proxy.hpp"
 #include "proxy_factory.hpp"
 
-class Session;
-
 class TcpProxy : public SocketProxy
 {
 public:
@@ -21,11 +19,6 @@ public:
     ~TcpProxy() override;
 
 private:
-    Session &session;
-    const uint64_t id;
-    std::shared_ptr<spdlog::logger> logger;
-
-    std::unique_ptr<UnixSocket> client;
     ev::io target;
 
     using buffer_t = std::vector<char, default_init_allocator<char>>;
@@ -39,14 +32,6 @@ private:
 
     void on_data(ev::io &from, ev::io &to, buffer_t &buf, int revents,
                  const std::string_view from_name, const std::string_view to_name);
-
-    template<typename FormatString, typename... Args>
-    void info(const FormatString &fmt, const Args &... args);
-
-    template<typename FormatString, typename... Args>
-    void fail(const FormatString &fmt, const Args &... args);
-
-    void close();
 };
 
 class TcpProxyFactory : public ProxyFactory {

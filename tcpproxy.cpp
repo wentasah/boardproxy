@@ -14,10 +14,7 @@
 using namespace std;
 
 TcpProxy::TcpProxy(Session &session, std::unique_ptr<UnixSocket> client_sock, uint16_t port)
-    : session(session)
-    , id(session.proxy_cnt++)
-    , logger(session.logger)
-    , client(move(client_sock))
+    : SocketProxy("tcpproxy", session, move(client_sock))
     , target(client->watcher.loop)
 {
     buf_c2t.reserve(65536);
@@ -26,7 +23,7 @@ TcpProxy::TcpProxy(Session &session, std::unique_ptr<UnixSocket> client_sock, ui
     struct sockaddr_in addr;
     addr.sin_family = AF_INET;
     addr.sin_port = htons(port);
-    auto &ip = session.board->ip_address;
+    auto &ip = session.get_board()->ip_address;
     int ret = inet_aton(ip.c_str(), &addr.sin_addr);
     if (ret == 0)
         throw runtime_error(fmt::format("Invalid board IP address: {}", ip));
@@ -95,22 +92,4 @@ void TcpProxy::on_data(ev::io &from, ev::io &to, buffer_t &buf, int revents, con
         return fail("{} send error: {}", to_name, strerror(errno));
     // TODO: Handle short write by throttling the sender
     buf.erase(buf.begin(), buf.begin() + ret);
-}
-
-template<typename FormatString, typename... Args>
-void TcpProxy::info(const FormatString &fmt, const Args &... args)
-{
-    logger->info("tcpproxy {}: {}", id, fmt::format(fmt, args...));
-}
-
-template<typename FormatString, typename... Args>
-void TcpProxy::fail(const FormatString &fmt, const Args &... args)
-{
-    logger->error("tcpproxy {}: {}", id, fmt::format(fmt, args...));
-    return close();
-}
-
-void TcpProxy::close()
-{
-    return session.proxies.remove_if([&](auto &proxy) { return proxy.get() == this; });
 }
