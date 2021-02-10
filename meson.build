@@ -54,3 +54,5 @@ foreach unit : [ 'boardproxy@.socket', 'boardproxy@.service' ]
 		 install_dir : systemd.get_pkgconfig_variable('systemdsystemunitdir'),
 		)
 endforeach
+
+subdir('tests')
