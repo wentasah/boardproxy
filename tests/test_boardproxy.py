@@ -20,27 +20,55 @@ os.environ['PATH'] = os.path.dirname(os.path.realpath(__file__)) + \
 
 
 class Daemon(object):
-    def __init__(self, config, await_listening=True, assert_returncode=True):
+    def __init__(self, config,
+                 await_listening=True,
+                 assert_returncode=True,
+                 systemd_socket_activate=False,
+                 terminate=True):
+        self.assert_returncode = assert_returncode
+        self.systemd_socket_activate = systemd_socket_activate
+        self.terminate = terminate
+
         with open('config.toml', 'w') as cfg:
             cfg.write(config)
-        # strace = ['strace', '-f', '-DD', '--timestamps=time,ms', '-o', 'strace.log']
-        self.process = Popen(['boardproxy'] +
+        cmd_prefix = []
+        # cmd_prefix = ['strace', '-f', '-DD', '--timestamps=time,ms', '-o', 'strace.log']
+
+        if systemd_socket_activate:
+            cmd_prefix = ['systemd-socket-activate', '--seqpacket',
+                          '--listen={}/boardproxy'.format(os.getcwd())]
+        self.process = Popen(cmd_prefix + ['boardproxy'] +
                              ['--daemon', '--config=config.toml', '.'],
                              stdout=PIPE, stderr=PIPE, text=True)
-        self.assert_returncode = assert_returncode
         if await_listening:
             # Wait until the daemon is able to accept connections
             for line in self.process.stderr:
-                if "Listening in" in line:
+                print(line.rstrip())
+                if "Listening" in line:
+                    # This matches output of both daemon and
+                    # systemd-socket-activate
                     break
-                print(line)
 
     def __enter__(self):
         return self.process
 
     def __exit__(self, type, value, traceback):
-        self.process.terminate()
+        # Under socket activation, the daemon should terminate
+        # automatically, we terminate it manually otherwise
+        if not self.systemd_socket_activate and self.terminate:
+            self.process.terminate()
         self.process.wait()
+
+        # Save stdout/err for later processing (if needed)
+        self.stdout = ''
+        for line in self.process.stdout:
+            self.stdout += line
+            print("Daemon stdout:", line.rstrip())
+        self.stderr = ''
+        for line in self.process.stderr:
+            self.stderr += line
+            print("Daemon stderr:", line.rstrip())
+
         if self.assert_returncode:
             assert self.process.returncode == 0
 
@@ -73,10 +101,11 @@ def test_missing_ip_address():
 command = "echo This is board 1"
 # ip_address missing
 '''
-    with Daemon(config, await_listening=False, assert_returncode=False) as daemon:
-        (stdout, stderr) = daemon.communicate()
-        assert daemon.returncode == 1
-        assert "no or invalid ip_address" in stderr
+    daemon = Daemon(config, await_listening=False, assert_returncode=False, terminate=False)
+    with daemon:
+        pass
+    assert daemon.process.returncode == 1
+    assert "no or invalid ip_address" in daemon.stderr
 
 
 def test_simple_command():
@@ -101,7 +130,7 @@ ip_address = "127.0.0.1"
         client = Popen(['boardproxy', '.'], stdout=PIPE, text=True)
         board_ok = False
         for line in client.stdout:
-            print(line)
+            print(line.rstrip())
             if line == "This is board 1\n":
                 board_ok = True
                 break
@@ -152,3 +181,16 @@ board2 = { name = "B", ip_address = "127.0.0.1" }
         for client in [client1, client2, client3]:
             client.terminate()
             client.wait()
+
+
+def test_systemd_socket_activation():
+    config = '''\
+[boards.1]
+command = "echo This is board 1"
+ip_address = "127.0.0.1"
+'''
+    with Daemon(config, systemd_socket_activate=True):
+        pass
+        res = run('boardproxy .')
+        assert res.returncode == 0
+        assert "This is board 1" in res.stdout
