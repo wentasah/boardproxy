@@ -83,7 +83,7 @@ static struct argp_option options[] = {
     { "allow-set-authorized-keys", OPT_ALLOW_SET_AUTHORIZED_KEYS, 0, 0,
       "Allow set-authorized-keys subcommand to (re)write ~/.ssh/authorized_keys file" },
     { "config",        'c', "FILE",      0,                   "Configuration file" },
-    { "daemon",        'd', 0,           0,                   "Run as central daemon" },
+    { "daemon",        'd', 0,           0,                   "Run as central daemon. Without this option, the program runs as a client connecting to the daemon." },
     { "name",          'n', "NAME",      0,                   "Client username (useful if multiple users share one UNIX account)" },
     { "sock-dir",      's', "DIR",       OPTION_HIDDEN,       "Directory, where to create UNIX sockets (deprecated)" },
     { "list-sessions", 'l',  0,          0,                   "List all sessions" },
@@ -94,7 +94,8 @@ static struct argp_option options[] = {
 static struct argp argp = {
     options, parse_opt, "[SOCK_DIR]",
 
-    "PSR boardproxy ... TBD"
+    "Access a pool of remote boards (or other resources) with "
+    "connection proxying via SSH port forwarding."
 };
 
 int main(int argc, char *argv[])
