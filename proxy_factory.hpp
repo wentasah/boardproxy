@@ -8,10 +8,8 @@
 class ProxyFactory {
 public:
     const std::string sock_name;
-    UnixSocket listener;
 
-    ProxyFactory(ev::loop_ref loop, std::string sock_name)
-        : sock_name(sock_name),  listener(loop, UnixSocket::type::stream) {};
+    ProxyFactory(std::string sock_name) : sock_name(sock_name) {}
     virtual ~ProxyFactory() {}
 
     virtual std::unique_ptr<SocketProxy>

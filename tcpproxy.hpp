@@ -36,8 +36,8 @@ private:
 
 class TcpProxyFactory : public ProxyFactory {
 public:
-    TcpProxyFactory(ev::loop_ref loop, std::string sock_name, uint16_t port)
-        : ProxyFactory(loop, sock_name), port(port) {}
+    TcpProxyFactory(std::string sock_name, uint16_t port)
+        : ProxyFactory(sock_name), port(port) {}
 
     std::unique_ptr<SocketProxy>
     create(Session &session, std::unique_ptr<UnixSocket> client_sock) override {

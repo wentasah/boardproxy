@@ -11,7 +11,9 @@
 
 class Daemon {
 public:
-    Daemon(ev::loop_ref &loop, std::string sock_dir, std::list<Board> boards);
+    Daemon(ev::loop_ref &loop, std::string sock_dir,
+           std::list<Board> boards,
+           std::list<std::unique_ptr<ProxyFactory>> proxy_factories);
     ~Daemon();
     void run();
     void assign_board(Session *session);
@@ -19,6 +21,16 @@ public:
 
     void print_status(int fd);
 private:
+    class ProxyListener {
+    public:
+        UnixSocket socket;
+        std::unique_ptr<ProxyFactory> factory;
+
+        ProxyListener(ev::loop_ref loop, std::unique_ptr<ProxyFactory> factory)
+            : socket(loop, UnixSocket::type::stream)
+            , factory(std::move(factory)) {}
+    };
+
     ev::loop_ref &loop;
 
     std::list<Board> boards;
@@ -31,8 +43,7 @@ private:
     void on_signal(ev::sig &w, int revents);
 
     UnixSocket client_listener { loop, UnixSocket::type::seqpacket, true };
-    std::list<std::unique_ptr<ProxyFactory>> proxy_factories;
-
+    std::list<std::unique_ptr<ProxyListener>> proxy_listeners;
 
     void on_client_connecting(ev::io &w, int revents);
     void on_socket_connecting(ev::io &w, int revents);

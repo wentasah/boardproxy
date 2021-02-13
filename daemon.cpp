@@ -9,10 +9,6 @@
 #include "daemon.hpp"
 #include "log.hpp"
 
-// TODO: Remove from here if possible
-#include "tcpproxy.hpp"
-#include "wrproxy.hpp"
-
 using namespace std;
 
 template<void (Daemon::*method)(ev::io &w, int)>
@@ -28,7 +24,7 @@ void Daemon::setup_listener(UnixSocket &sock, std::string sock_name)
     sock.watcher.start();
 }
 
-Daemon::Daemon(ev::loop_ref &io, std::string sock_dir, std::list<Board> boards)
+Daemon::Daemon(ev::loop_ref &io, std::string sock_dir, std::list<Board> boards, std::list<std::unique_ptr<ProxyFactory> > proxy_factories)
     : loop(io)
     , boards(move(boards))
 {
@@ -48,12 +44,11 @@ Daemon::Daemon(ev::loop_ref &io, std::string sock_dir, std::list<Board> boards)
 
     setup_listener<&Daemon::on_client_connecting>(client_listener, sock_dir + "/boardproxy");
 
-    proxy_factories.push_back(make_unique<WrProxyFactory>(loop, "wrproxy"));
-    proxy_factories.push_back(make_unique<TcpProxyFactory>(loop, "www", 80));
-
-    for (auto &factory : proxy_factories)
-        setup_listener<&Daemon::on_socket_connecting>(factory->listener,  sock_dir + "/" + factory->sock_name);
-
+    for (auto &factory : proxy_factories) {
+        proxy_listeners.push_back(make_unique<ProxyListener>(loop, move(factory)));
+        setup_listener<&Daemon::on_socket_connecting>(proxy_listeners.back()->socket,
+                                                      sock_dir + "/" + proxy_listeners.back()->factory->sock_name);
+    }
     if (client_listener.is_from_systemd)
         logger->info("Activated by systemd, listening in {}", sock_dir);
     else
@@ -83,25 +78,25 @@ void Daemon::on_client_connecting(ev::io &w, int revents)
 
 void Daemon::on_socket_connecting(ev::io &w, int revents)
 {
-    ProxyFactory *factory = nullptr;
-    for (auto &f : proxy_factories) {
+    ProxyListener *listener = nullptr;
+    for (auto &l : proxy_listeners) {
         // TODO: get rid of O(n) complexity
-        if (&(f->listener.watcher) == &w) {
-            factory = f.get();
+        if (&(l->socket.watcher) == &w) {
+            listener = l.get();
             break;
         }
     }
-    if (!factory)
+    if (!listener)
         throw std::runtime_error(string("Proxy factory not found in ") + string(__PRETTY_FUNCTION__));
 
-    auto socket = factory->listener.accept();
+    auto socket = listener->socket.accept();
     struct ucred cred = socket->peer_cred();
     Session *s = find_session_by_ppid(cred.pid);
     if (s) {
-        s->new_socket_connection(move(socket), *factory);
+        s->new_socket_connection(move(socket), *listener->factory.get());
     } else {
         logger->error("Cannot find session for {} connection from pid {}",
-                      factory->sock_name,  cred.pid);
+                      listener->factory->sock_name, cred.pid);
     }
 }
 
