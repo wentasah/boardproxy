@@ -8,10 +8,6 @@
 #include "util.hpp"
 #include "config.hpp"
 
-// TODO: Remove from here if possible
-#include "tcpproxy.hpp"
-#include "wrproxy.hpp"
-
 using namespace std;
 
 struct {
@@ -125,11 +121,7 @@ int main(int argc, char *argv[])
             throw runtime_error("sock_dir not specified. Specify it either on command line or in the config file.");
 
         if (opt.daemon) {
-            std::list<std::unique_ptr<ProxyFactory>> proxy_factories;
-            proxy_factories.push_back(make_unique<WrProxyFactory>("wrproxy"));
-            proxy_factories.push_back(make_unique<TcpProxyFactory>("www", 80));
-
-            Daemon d(loop, sock_dir, move(cfg.boards), move(proxy_factories));
+            Daemon d(loop, sock_dir, move(cfg.boards), move(cfg.proxy_factories));
             loop.run();
         } else {
             proto::setup::command_t command = proto::setup::command::connect;

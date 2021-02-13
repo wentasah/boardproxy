@@ -6,10 +6,9 @@ close_command_template = '''bash -c "echo \"break 2000 exit\" | exec ssh -t psr-
 
 socket_dir = "/run/psr-hw"
 
-# TODO
-# [sockets]
-# wrproxy = { type = "wrproxy" }
-# www = { type = "tcp", port = 80 }
+[sockets]
+wrproxy = { type = "wrproxy" }
+www = { type = "tcp", port = 80 }
 
 [boards]
 mzapo01 = { motor = "motor 01", serial_id = "usb-FTDI_FT230X_Basic_UART_DN00JU72-if00-port0", ip_address = "10.35.95.58" }

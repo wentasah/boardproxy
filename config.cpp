@@ -6,6 +6,9 @@
 #include <fmt/format.h>
 #include <iostream>
 
+#include "tcpproxy.hpp"
+#include "wrproxy.hpp"
+
 using namespace std;
 
 template <typename T>
@@ -82,6 +85,36 @@ static std::list<Board> parse_boards(const string& filename, const toml::table c
     return board_list;
 }
 
+static std::list<unique_ptr<ProxyFactory>> parse_sockets(const string& filename, const toml::table cfg)
+{
+    std::list<unique_ptr<ProxyFactory>> proxy_factories;
+
+    if (!cfg.contains("sockets"))
+        return std::list<unique_ptr<ProxyFactory>>();
+
+    const auto sockets = cfg["sockets"].as_table();
+    if (!sockets)
+        throw runtime_error(filename + ": sockets is not TOML table");
+
+    for (auto [key, val] : *sockets) {
+        const toml::table *socket_p = val.as_table();
+        if (!socket_p)
+            throw runtime_error(filename + ": sockets." + key + " is not TOML table (at " + to_string(socket_p->source().begin) + ")");
+        const toml::table &socket = *socket_p;
+
+        optional<string> type = socket["type"].value<string>();
+        if (!type.has_value())
+            throw runtime_error(filename + ": sockets." + key + ".type missing (at " + to_string(socket.source().begin) + ")");
+        if (type == "tcp")
+            proxy_factories.push_back(make_unique<TcpProxyFactory>(key, *socket["port"].value<uint16_t>()));
+        else if (type == "wrproxy")
+            proxy_factories.push_back(make_unique<WrProxyFactory>(key));
+        else
+            throw runtime_error(filename + ": Unexpected sockets." + key + ".type (at " + to_string(socket.source().begin) + ")");
+    }
+    return proxy_factories;
+}
+
 Config::Config(string filename)
 {
     if (filename.empty())
@@ -95,6 +128,7 @@ Config::Config(string filename)
             sock_dir = *sd;
 
         this->boards = parse_boards(filename, cfg);
+        this->proxy_factories = parse_sockets(filename, cfg);
     }
     catch (const toml::parse_error& err) {
         stringstream msg;
