@@ -3,6 +3,7 @@ from subprocess import Popen, PIPE
 import shlex
 import os
 from datetime import datetime
+import time
 import pytest
 
 # d = Popen(['ls', '-l'], stdout=PIPE, text=True)
@@ -17,6 +18,14 @@ os.environ['PATH'] = os.path.dirname(os.path.realpath(__file__)) + \
 ##################
 # Helper functions
 ##################
+
+
+def read_lines_until(text, io, print_prefix=""):
+    for line in io:
+        if print_prefix:
+            print(print_prefix, line.rstrip())
+        if text in line:
+            break
 
 
 class Daemon(object):
@@ -43,7 +52,7 @@ class Daemon(object):
         if await_listening:
             # Wait until the daemon is able to accept connections
             for line in self.process.stderr:
-                print(line.rstrip())
+                print("Daemon stderr:", line.rstrip())
                 if "Listening" in line:
                     # This matches output of both daemon and
                     # systemd-socket-activate
@@ -73,10 +82,13 @@ class Daemon(object):
             assert self.process.returncode == 0
 
 
-def run(args):
-    if type(args) == str:
+def run(args, **kwargs):
+    if type(args) == str and kwargs.get("shell", False) == False:
         args = shlex.split(args)
-    return subprocess.run(args, capture_output=True, text=True)
+    res = subprocess.run(args, capture_output=True, text=True, **kwargs)
+    print("stdout of {}:".format(shlex.join(args)), res.stdout)
+    print("stderr of {}:".format(shlex.join(args)), res.stderr)
+    return res
 
 
 @pytest.fixture(autouse=True)
@@ -190,7 +202,48 @@ command = "echo This is board 1"
 ip_address = "127.0.0.1"
 '''
     with Daemon(config, systemd_socket_activate=True):
-        pass
         res = run('boardproxy .')
         assert res.returncode == 0
         assert "This is board 1" in res.stdout
+
+
+# TODO: close_command test
+
+
+def test_tcp_proxy():
+    config = '''\
+[sockets]
+hello = { type = "tcp", port = 1234 }
+
+[boards.1]
+command = "bash -c 'echo This is board 1; read'"
+ip_address = "127.0.0.1"'''
+    # with Popen('echo Hello | nc -l -N 1234', shell=True) as server:
+    with Popen('systemd-socket-activate --listen=1234 --accept --inetd echo hello',
+               shell=True, stderr=PIPE, text=True) as server:
+        read_lines_until("Listening", server.stderr)
+        with Daemon(config):
+            with Popen('ssh -tt -L4321:{sock_dir}/hello localhost boardproxy {sock_dir}'.format(sock_dir=os.getcwd()),
+                       shell=True, stdout=PIPE, text=True) as client:
+                read_lines_until("Connecting to board", client.stdout, print_prefix="Client stdout:")
+                res = run('nc localhost 1234 < /dev/null', shell=True)
+                client.terminate()
+                server.terminate()
+                assert res.returncode == 0
+                assert "hello" in res.stdout
+
+
+def test_multipe_socket_proxies():
+    config = '''\
+[sockets]
+ssh = { type = "tcp", port = 22 }
+www = { type = "tcp", port = 80 }
+wrproxy = { type = "wrproxy" }
+
+[boards.1]
+command = "bash -c 'echo This is board 1; read'"
+ip_address = "127.0.0.1"'''
+    with Daemon(config):
+        assert os.path.exists('ssh')
+        assert os.path.exists('www')
+        assert os.path.exists('wrproxy')
