@@ -53,9 +53,11 @@ To connect one of the boards, run:
     boardproxy /run/my_board
 
 If a board is available, the corresponding `command` is run and the
-user can interact with its serial line. If all boards are occupied,
-the list of current board users is printed and the user wait. Whenever
-an existing user disconnects, waiting user gets the access.
+user can interact with board's serial line via
+[sterm](https://github.com/wentasah/sterm) program. If all boards are
+occupied, the list of current board users is printed and the user
+wait. Whenever an existing user disconnects, waiting user gets the
+access.
 
 ## SSH ForcedCommand
 
@@ -119,7 +121,7 @@ Boardproxy supports port forwarding. A nice feature is that users do
 not have to care about which board they connect – boardproxy ensures
 that ports get forwarded to their board.
 
-To access the boards SSH and HTTP server, add the following the
+To access the board's SSH and HTTP server, add the following to the
 configuration file:
 
 ``` toml
