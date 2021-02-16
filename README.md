@@ -10,9 +10,9 @@ allow SSH-based port forwarding.
 - [Compilation](#compilation)
 - [Usage](#usage)
     - [Quick start](#quick-start)
+    - [Port forwarding](#port-forwarding)
     - [SSH ForcedCommand](#ssh-forcedcommand)
     - [systemd socket activation](#systemd-socket-activation)
-    - [Port forwarding](#port-forwarding)
 
 <!-- markdown-toc end -->
 
@@ -79,6 +79,47 @@ If all boards are occupied, the list of current board users is printed
 and the user waits. Whenever an existing user disconnects, the first
 waiting user gets the board.
 
+## Port forwarding
+
+Boardproxy can forward network communication the connected board. A
+nice feature is that users do not have to care about which board they
+connect – boardproxy ensures that communication is forwarded to the
+used board.
+
+For example, to access the board's SSH and HTTP server, add the
+following to the configuration file:
+
+``` toml
+[sockets]
+ssh = { type = "tcp", port = 22 }
+www = { type = "tcp", port = 80 }
+```
+
+Then, users can use SSH-provided TCP-to-UNIX port forwarding to
+forward TCP connections to `boardproxy`. Boardproxy then proxies the
+connection to the correct board. More specifically, when users connect
+to the board like this:
+
+    ssh -L2222:/run/my_boards/ssh -L8080:/run/my_boards/www login@board-server.example.com
+
+then board's SSH server can be reached with:
+
+    ssh localhost:2222
+
+and boards' HTTP server is available as:
+
+    http://localhost:8080
+
+To make connecting the board easier, one can put the following to
+their `~/.ssh/config`:
+
+    Host my_board
+         User login
+         Hostname board-server.example.com
+         LocalForward 2222 /run/my_boards/ssh
+         LocalForward 8080  /run/my_boards/www
+         ExitOnForwardFailure yes
+
 ## SSH ForcedCommand
 
 If you don't want to give your users shell access on your server, you
@@ -134,47 +175,6 @@ members of students group to access your boards:
 
     [Socket]
     SocketGroup=students
-
-## Port forwarding
-
-Boardproxy can forward network communication the connected board. A
-nice feature is that users do not have to care about which board they
-connect – boardproxy ensures that communication is forwarded to the
-used board.
-
-For example, to access the board's SSH and HTTP server, add the
-following to the configuration file:
-
-``` toml
-[sockets]
-ssh = { type = "tcp", port = 22 }
-www = { type = "tcp", port = 80 }
-```
-
-Then, users can use SSH-provided TCP-to-UNIX port forwarding to
-forward TCP connections to `boardproxy`. Boardproxy then proxies the
-connection to the correct board. More specifically, when users connect
-to the board like this:
-
-    ssh -L2222:/run/my_boards/ssh -L8080:/run/my_boards/www login@board-server.example.com
-
-then board's SSH server can be reached with:
-
-    ssh localhost:2222
-
-and boards' HTTP server is available as:
-
-    http://localhost:8080
-
-To make connecting the board easier, one can put the following to
-their `~/.ssh/config`:
-
-    Host my_board
-         User login
-         Hostname board-server.example.com
-         LocalForward 2222 /run/my_boards/ssh
-         LocalForward 8080  /run/my_boards/www
-         ExitOnForwardFailure yes
 
 
 <!--  LocalWords:  boardproxy
