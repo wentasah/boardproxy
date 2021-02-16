@@ -13,7 +13,7 @@ import pytest
 # sys.exit(0)
 
 os.environ['PATH'] = os.path.dirname(os.path.realpath(__file__)) + \
-    '/../build:' + os.environ['PATH']
+    '/../build/src:' + os.environ['PATH']
 
 ##################
 # Helper functions
