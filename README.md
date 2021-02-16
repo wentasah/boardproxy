@@ -1,11 +1,26 @@
 # boardproxy
 
-Manages remote access to a pool of (embedded) boards or computers.
+Manage remote access to a pool of (embedded) boards or computers and
+allow SSH-based port forwarding.
+
+<!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
+**Table of Contents**
+
+- [Features](#features)
+- [Compilation](#compilation)
+- [Usage](#usage)
+    - [Quick start](#quick-start)
+    - [SSH ForcedCommand](#ssh-forcedcommand)
+    - [systemd socket activation](#systemd-socket-activation)
+    - [Port forwarding](#port-forwarding)
+
+<!-- markdown-toc end -->
+
 
 # Features
 
 - Automates board allocation to users and implements wait queue.
-- Can provides access to board's serial line via SSH.
+- Typically configured to provide access to board's serial line via SSH.
 - When used with SSH port forwarding, the port is automatically
   forwarded to the used board.
 - Can execute a cleanup command when user disconnects.
@@ -25,7 +40,10 @@ Manages remote access to a pool of (embedded) boards or computers.
 # Usage
 
 To access the board via boardproxy, prepare a [TOML](https://toml.io/)
-configuration file that defines your boards and run boardproxy daemon.
+*configuration file* that defines your boards and run *boardproxy
+daemon*. Then use *boardproxy in client mode* to connect to the board.
+
+## Quick start
 
 A simple configuration file (`config.toml`) can look like this:
 
@@ -52,12 +70,14 @@ To connect one of the boards, run:
 
     boardproxy /run/my_board
 
-If a board is available, the corresponding `command` is run and the
-user can interact with board's serial line via
-[sterm](https://github.com/wentasah/sterm) program. If all boards are
-occupied, the list of current board users is printed and the user
-wait. Whenever an existing user disconnects, waiting user gets the
-access.
+If a board is available, the corresponding `command` is run by the
+daemon and its stdin/out is connected to those of the client. In this
+example, it allows the user to interact with the board's serial line
+via [sterm](https://github.com/wentasah/sterm) program.
+
+If all boards are occupied, the list of current board users is printed
+and the user waits. Whenever an existing user disconnects, the first
+waiting user gets the board.
 
 ## SSH ForcedCommand
 
@@ -109,20 +129,21 @@ And if needed, override its settings:
 
     systemctl edit boardproxy@my_boards.socket
 
-For example, add the following to the spawned editor to allow every
-student to access your boards:
+For example, add the following to the spawned editor to allow all
+members of students group to access your boards:
 
     [Socket]
     SocketGroup=students
 
 ## Port forwarding
 
-Boardproxy supports port forwarding. A nice feature is that users do
-not have to care about which board they connect – boardproxy ensures
-that ports get forwarded to their board.
+Boardproxy can forward network communication the connected board. A
+nice feature is that users do not have to care about which board they
+connect – boardproxy ensures that communication is forwarded to the
+used board.
 
-To access the board's SSH and HTTP server, add the following to the
-configuration file:
+For example, to access the board's SSH and HTTP server, add the
+following to the configuration file:
 
 ``` toml
 [sockets]
@@ -130,10 +151,10 @@ ssh = { type = "tcp", port = 22 }
 www = { type = "tcp", port = 80 }
 ```
 
-Then, users can users can use SSH-provided TCP-to-UNIX port forwarding
-to forward TCP connections to `boardproxy`. Boardproxy then proxies
-the connection to the correct board. More specifically, when users
-connect to the board like this:
+Then, users can use SSH-provided TCP-to-UNIX port forwarding to
+forward TCP connections to `boardproxy`. Boardproxy then proxies the
+connection to the correct board. More specifically, when users connect
+to the board like this:
 
     ssh -L2222:/run/my_boards/ssh -L8080:/run/my_boards/www login@board-server.example.com
 
@@ -158,3 +179,7 @@ their `~/.ssh/config`:
 
 <!--  LocalWords:  boardproxy
  -->
+
+<!-- Local Variables: -->
+<!-- markdown-toc-user-toc-structure-manipulation-fn: cdr -->
+<!-- End: -->
