@@ -19,11 +19,12 @@ allow SSH-based port forwarding.
 
 # Features
 
-- Automates board allocation to users and implements wait queue.
-- Typically configured to provide access to board's serial line via SSH.
+- Automates board allocation to users and implements a wait queue.
+- Typically configured to provide access to board's serial line via
+  SSH.
 - When used with SSH port forwarding, the port is automatically
   forwarded to the used board.
-- Can execute a cleanup command when user disconnects.
+- Can execute a cleanup command when a user disconnects.
 
 # Compilation
 
@@ -39,9 +40,9 @@ allow SSH-based port forwarding.
 
 # Usage
 
-To access the board via boardproxy, prepare a [TOML](https://toml.io/)
-*configuration file* that defines your boards and run *boardproxy
-daemon*. Then use *boardproxy in client mode* to connect to the board.
+To access the board via boardproxy, prepare a [TOML](https://toml.io/) *configuration file*
+that defines your boards and run the *boardproxy daemon*. Then use the
+*boardproxy in client mode* to connect to the board.
 
 ## Quick start
 
@@ -60,7 +61,8 @@ ip_address = "192.168.1.3"
 ```
 
 This defines two boards. The `command` is executed whenever somebody
-runs the boardproxy client. `ip_address` is used for port forwarding.
+runs the boardproxy client. The `ip_address` is used for port
+forwarding.
 
 The daemon is run as:
 
@@ -68,26 +70,26 @@ The daemon is run as:
 
 To connect one of the boards, run:
 
-    boardproxy /run/my_board
+    boardproxy /run/my_boards
 
-If a board is available, the corresponding `command` is run by the
-daemon and its stdin/out is connected to those of the client. In this
-example, it allows the user to interact with the board's serial line
-via [sterm](https://github.com/wentasah/sterm) program.
+If a board is available, the daemon runs the corresponding `command`
+with its stdin/out/err connected stdin/out/err of the client. The
+commands above allow the user to interact with the board serial line
+via the [sterm](https://github.com/wentasah/sterm) program.
 
-If all boards are occupied, the list of current board users is printed
-and the user waits. Whenever an existing user disconnects, the first
-waiting user gets the board.
+If all boards are occupied, a list of boards and their users is
+printed, and the new user waits. Whenever an existing user
+disconnects, the first waiting user gets the board.
 
 ## Port forwarding
 
-Boardproxy can forward network communication the connected board. A
-nice feature is that users do not have to care about which board they
-connect – boardproxy ensures that communication is forwarded to the
-used board.
+Boardproxy can forward network traffic to connected boards. A nice
+feature is that users do not have to care about which board they
+connect to – boardproxy ensures that the traffic is forwarded to the
+board assigned to the user.
 
 For example, to access the board's SSH and HTTP server, add the
-following to the configuration file:
+following to the daemon configuration file:
 
 ``` toml
 [sockets]
@@ -96,17 +98,17 @@ www = { type = "tcp", port = 80 }
 ```
 
 Then, users can use SSH-provided TCP-to-UNIX port forwarding to
-forward TCP connections to `boardproxy`. Boardproxy then proxies the
+forward TCP connections to `boardproxy` and boardproxy then proxies the
 connection to the correct board. More specifically, when users connect
 to the board like this:
 
     ssh -L2222:/run/my_boards/ssh -L8080:/run/my_boards/www login@board-server.example.com
 
-then board's SSH server can be reached with:
+then the board's SSH server can be reached with:
 
     ssh localhost:2222
 
-and boards' HTTP server is available as:
+and board's HTTP server is available as:
 
     http://localhost:8080
 
@@ -122,10 +124,10 @@ their `~/.ssh/config`:
 
 ## SSH ForcedCommand
 
-If you don't want to give your users shell access on your server, you
-can use SSH ForcedCommand to allows users executing just boardproxy
-and nothing more. Typical configuration in `/etc/ssh/sshd_config`
-could look like this:
+If you don't want to give your users shell access on the boardproxy
+server, you can use SSH ForcedCommand to allow users to execute just
+the boardproxy command and nothing more. Typical configuration in
+`/etc/ssh/sshd_config` could look like this:
 
     Match Group students
       ForceCommand /usr/local/bin/boardproxy --allow-set-authorized-keys /run/my_boards
@@ -138,8 +140,8 @@ could look like this:
       ClientAliveInterval 60
       ClientAliveCountMax 5
 
-With this configurations, users (students) run the following command
-to connect to the baord:
+With this configuration, users (students) run the following command to
+connect to the board:
 
     ssh login@board-server.example.com
 
@@ -152,8 +154,10 @@ The `--allow-set-authorized-keys` option allows users to set their SSH
 
 Boardproxy supports systemd socket activation. In this mode,
 boardproxy is only started when a user is connected. When the last
-user disconnects, boardproxy is stopped. This is useful for
-automatically re-reading configuration file after its change.
+user disconnects, boardproxy is stopped. Stopping the daemon is useful
+for automatically re-reading configuration file after its change (note
+that reloading the config without disconnecting currently connected
+users is not possible).
 
 We provide systemd template units `boardproxy@.socket` and
 `boardproxy@.service`. Typically, administrators will need to override
@@ -175,6 +179,10 @@ members of students group to access your boards:
 
     [Socket]
     SocketGroup=students
+
+## Command templates
+
+Commands to execute
 
 
 <!--  LocalWords:  boardproxy
