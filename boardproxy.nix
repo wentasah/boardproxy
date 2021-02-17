@@ -1,7 +1,15 @@
 { stdenv, lib, meson, ninja, pkg-config, libev, fmt, spdlog, boost, nix-gitignore, systemd }:
 stdenv.mkDerivation {
   name = "boardproxy";
-  src = nix-gitignore.gitignoreSource [] ./.;
+  src = if builtins.pathExists ./.git then
+    builtins.fetchGit { url = ./.; }
+  else
+    nix-gitignore.gitignoreSource [] ./.;
+
+  mesonFlags = [
+    "-Dsystemdsystemunitdir=${placeholder "out"}/lib/systemd/system"
+  ];
+
   nativeBuildInputs = [ meson ninja pkg-config ];
   buildInputs = [ libev fmt spdlog boost systemd ];
 

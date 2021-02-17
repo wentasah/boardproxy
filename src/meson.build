@@ -1,7 +1,7 @@
 version_h = vcs_tag(
 	input : 'version.h.in',
 	output : 'version.h',
-	command : ['sh', '-c', 'git describe --always --dirty --match="v[0-9]*" | sed -e "s/^v//"'],
+	command : ['sh', '-c', '(git describe --always --dirty --match="v[0-9]*" || echo "v???") | sed -e "s/^v//"'],
 )
 
 cxx = meson.get_compiler('cpp')

@@ -7,14 +7,20 @@ project('boardproxy', [ 'cpp' ],
 
 subdir('src')
 
-systemd = dependency('systemd')
+systemd_dep = dependency('systemd')
+
+if get_option('systemdsystemunitdir') != ''
+  systemd_systemunitdir = get_option('systemdsystemunitdir')
+else
+  systemd_systemunitdir = systemd_dep.get_pkgconfig_variable('systemdsystemunitdir')
+endif
 
 foreach unit : [ 'boardproxy@.socket', 'boardproxy@.service' ]
   configure_file(copy : true,
 		 input : unit,
 		 output : unit,
 		 install : true,
-		 install_dir : systemd.get_pkgconfig_variable('systemdsystemunitdir'),
+		 install_dir : systemd_systemunitdir,
 		)
 endforeach
 

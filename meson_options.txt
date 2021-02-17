@@ -1,0 +1,1 @@
+option('systemdsystemunitdir', type: 'string', value: '', description: 'Directory for systemd service files.')
