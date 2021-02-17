@@ -13,6 +13,7 @@ allow SSH-based port forwarding.
     - [Port forwarding](#port-forwarding)
     - [SSH ForcedCommand](#ssh-forcedcommand)
     - [systemd socket activation](#systemd-socket-activation)
+    - [Command templates](#command-templates)
 
 <!-- markdown-toc end -->
 
@@ -182,8 +183,13 @@ members of students group to access your boards:
 
 ## Command templates
 
-Commands to execute
-
+Commands to execute by the daemon can be specified via a template.
+There is no need to repeat long commands for each board. The template
+(e.g. `command_template` or `close_command_template`) can contain
+*replacement fields* in [fmt
+syntax](https://fmt.dev/latest/syntax.html), which get replaced by
+values specific for each board. See [this configuration
+file](./configs/psr-hw.toml) for examples.
 
 <!--  LocalWords:  boardproxy
  -->
