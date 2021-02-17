@@ -14,6 +14,7 @@ allow SSH-based port forwarding.
     - [SSH ForcedCommand](#ssh-forcedcommand)
     - [systemd socket activation](#systemd-socket-activation)
     - [Command templates](#command-templates)
+    - [User management](#user-management)
 
 <!-- markdown-toc end -->
 
@@ -190,6 +191,24 @@ There is no need to repeat long commands for each board. The template
 syntax](https://fmt.dev/latest/syntax.html), which get replaced by
 values specific for each board. See [this configuration
 file](./configs/psr-hw.toml) for examples.
+
+## User management
+
+There are at least two ways, how boardproxy users can be managed:
+
+- Each user has a separate UNIX account on the boardproxy server.
+
+  In this case, users can run boardproxy clients manually or their
+  accounts can be configured as described in [SSH
+  ForcedCommand](#ssh-forcedcommand) section.
+
+- All users share a single UNIX account and are authenticated by their
+  SSH keys. In the `authorized_keys` file, the `command` option is
+  used to run boardproxy. For example:
+
+        command="boardproxy --name=username /run/my_boards" ssh-rsa ...
+
+
 
 <!--  LocalWords:  boardproxy
  -->
