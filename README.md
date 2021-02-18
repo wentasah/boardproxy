@@ -11,10 +11,10 @@ allow SSH-based port forwarding.
 - [Usage](#usage)
     - [Quick start](#quick-start)
     - [Port forwarding](#port-forwarding)
-    - [SSH ForcedCommand](#ssh-forcedcommand)
     - [systemd socket activation](#systemd-socket-activation)
     - [Command templates](#command-templates)
     - [User management](#user-management)
+        - [SSH ForcedCommand](#ssh-forcedcommand)
 
 <!-- markdown-toc end -->
 
@@ -124,34 +124,6 @@ their `~/.ssh/config`:
          LocalForward 8080  /run/my_boards/www
          ExitOnForwardFailure yes
 
-## SSH ForcedCommand
-
-If you don't want to give your users shell access on the boardproxy
-server, you can use SSH ForcedCommand to allow users to execute just
-the boardproxy command and nothing more. Typical configuration in
-`/etc/ssh/sshd_config` could look like this:
-
-    Match Group students
-      ForceCommand /usr/local/bin/boardproxy --allow-set-authorized-keys /run/my_boards
-      AllowStreamLocalForwarding local # needed for
-    #   AllowTcpForwarding no
-      AllowTcpForwarding local 	# should be no, but does not work
-      AllowAgentForwarding no
-      PermitUserRC no
-      X11Forwarding no
-      ClientAliveInterval 60
-      ClientAliveCountMax 5
-
-With this configuration, users (students) run the following command to
-connect to the board:
-
-    ssh login@board-server.example.com
-
-The `--allow-set-authorized-keys` option allows users to set their SSH
-`authorized_keys` via command like:
-
-    ssh login@board-server.example.com set-authorized-keys < ~/.ssh/id_rsa.pub
-
 ## systemd socket activation
 
 Boardproxy supports systemd socket activation. In this mode,
@@ -200,13 +172,43 @@ There are at least two ways, how boardproxy users can be managed:
 
   In this case, users can run boardproxy clients manually or their
   accounts can be configured as described in [SSH
-  ForcedCommand](#ssh-forcedcommand) section.
+  ForcedCommand](#ssh-forcedcommand) section below.
 
 - All users share a single UNIX account and are authenticated by their
   SSH keys. In the `authorized_keys` file, the `command` option is
   used to run boardproxy. For example:
 
         command="boardproxy --name=username /run/my_boards" ssh-rsa ...
+
+### SSH ForcedCommand
+
+If you don't want to give your users shell access on the boardproxy
+server, you can use SSH ForcedCommand to allow users to execute just
+the boardproxy command and nothing more. Typical configuration in
+`/etc/ssh/sshd_config` could look like this:
+
+```ssh-config
+Match Group students
+  ForceCommand /usr/local/bin/boardproxy --allow-set-authorized-keys /run/my_boards
+  AllowStreamLocalForwarding local
+#  AllowTcpForwarding no
+  AllowTcpForwarding local	# should be no, but does not work
+  AllowAgentForwarding no
+  PermitUserRC no
+  X11Forwarding no
+  ClientAliveInterval 60
+  ClientAliveCountMax 5
+```
+
+With this configuration, users (students) run the following command to
+connect to the board:
+
+    ssh login@board-server.example.com
+
+The `--allow-set-authorized-keys` option allows users to set their SSH
+`authorized_keys` via command like:
+
+    ssh login@board-server.example.com set-authorized-keys < ~/.ssh/id_rsa.pub
 
 
 
