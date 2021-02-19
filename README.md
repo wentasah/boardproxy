@@ -46,6 +46,9 @@ To access the board via boardproxy, prepare a [TOML](https://toml.io/) *configur
 that defines your boards and run the *boardproxy daemon*. Then use the
 *boardproxy in client mode* to connect to the board.
 
+You can start by looking at [example configuration files](./configs)
+or continue reading below.
+
 ## Quick start
 
 A simple configuration file (`config.toml`) can look like this:
