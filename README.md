@@ -78,7 +78,7 @@ To connect one of the boards, run:
     boardproxy /run/my_boards
 
 If a board is available, the daemon runs the corresponding `command`
-with its stdin/out/err connected stdin/out/err of the client. The
+with its stdin/out/err connected to stdin/out/err of the client. The
 commands above allow the user to interact with the board serial line
 via the [sterm](https://github.com/wentasah/sterm) program.
 
