@@ -1,4 +1,7 @@
 pytest = find_program('pytest', required : false, disabler : true)
+if not pytest.found()
+  pytest = find_program('pytest-3', required : false, disabler : true)
+endif
 
 test(
   'pytest',
