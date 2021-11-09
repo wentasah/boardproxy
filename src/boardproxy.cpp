@@ -96,10 +96,13 @@ static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
 
 /* The options we understand. */
 static struct argp_option options[] = {
-    { "allow-set-authorized-keys", OPT_ALLOW_SET_AUTHORIZED_KEYS, 0, 0,
-      "Allow set-authorized-keys subcommand to (re)write ~/.ssh/authorized_keys file" },
+    { .doc = "Daemon options:" },
     { "config",        'c', "FILE",      0,                   "Configuration file" },
     { "daemon",        'd', 0,           0,                   "Run as central daemon. Without this option, the program runs as a client connecting to the daemon." },
+
+    { .doc = "Client options:" },
+    { "allow-set-authorized-keys", OPT_ALLOW_SET_AUTHORIZED_KEYS, 0, 0,
+      "Allow set-authorized-keys subcommand to (re)write ~/.ssh/authorized_keys file" },
     { "name",          'n', "NAME",      0,                   "Client username (useful if multiple users share one UNIX account)" },
     { "sock-dir",      's', "DIR",       OPTION_HIDDEN,       "Directory, where to create UNIX sockets (deprecated)" },
     { "list-sessions", 'l',  0,          0,                   "List all sessions" },
