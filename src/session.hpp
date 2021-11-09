@@ -47,6 +47,7 @@ public:
     void new_socket_connection(std::unique_ptr<UnixSocket> s, ProxyFactory &proxy_factory);
     const Board* get_board() const { return board; }
 
+    std::string get_username() const;
     std::string get_status_line() const;
 private:
     friend SocketProxy;

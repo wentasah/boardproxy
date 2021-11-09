@@ -73,10 +73,28 @@ void Session::new_socket_connection(std::unique_ptr<UnixSocket> s, ProxyFactory 
     proxies.push_back(proxy_factory.create(*this, move(s)));
 }
 
+string Session::get_username() const
+{
+    // TODO: Add trust_username option to the config file and user
+    // this->username only if trusted.
+    //
+    // We cannot always rely on username_cred, which cannot be faked,
+    // because in some setups, a single UNIX account is used by
+    // multiple users. In this case, the --name option (stored in
+    // this->username) can be used to distinguish between those users.
+    // If the arguments of the --name are specified by the system
+    // administrator (e.g. in ~/.ssh/authorized_keys), we can trust
+    // them.
+    //
+    // In other setups, when users can specify the --name arbitrarily,
+    // we should not use that value.
+    return username.empty() ? username_cred : username;
+}
+
 string Session::get_status_line() const
 {
     return fmt::format(("{:10s} {:10s} {:15s} {:%c}"),
-                       username.empty() ? username_cred : username,
+                       get_username(),
                        board ? board->id : "",
                        board ? board->ip_address : "waiting",
                        fmt::localtime(board ? board_since : session_since));
