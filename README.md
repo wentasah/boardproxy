@@ -15,6 +15,10 @@ allow SSH-based port forwarding.
     - [Command templates](#command-templates)
     - [User management](#user-management)
         - [SSH ForcedCommand](#ssh-forcedcommand)
+    - [Configuration file reference](#configuration-file-reference)
+        - [Top-level table](#top-level-table)
+        - [`boards` table](#boards-table)
+        - [`sockets` table](#sockets-table)
 
 <!-- markdown-toc end -->
 
