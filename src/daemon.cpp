@@ -80,11 +80,12 @@ void Daemon::assign_board(Session *session)
 {
     Board *brd = find_available_board();
 
-    // Notify the session about board availability
-    session->assign_board(brd);
-
-    if (!brd)
+    if (brd) {
+        // Notify the session about board availability
+        session->assign_board(*brd);
+    } else {
         wait_queue.push_back(session);
+    }
 }
 
 void Daemon::on_client_connecting(ev::io &w, int revents)
@@ -144,7 +145,7 @@ void Daemon::close_session(Session *session)
         if (board) {
             Session *sess = wait_queue.front();
             wait_queue.pop_front();
-            sess->assign_board(board);
+            sess->assign_board(*board);
         }
     }
 

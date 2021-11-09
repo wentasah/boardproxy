@@ -49,13 +49,16 @@ struct setup : header {
     command_t cmd;
     pid_t ppid;
     char username[32] = { 0 };
+    bool no_wait;
 
     setup(command_t command,
           pid_t ppid,
-          const std::string user)
+          const std::string user,
+          bool no_wait)
         : header(msg_type::setup, sizeof(*this))
         , cmd(command)
         , ppid(ppid)
+        , no_wait(no_wait)
     {
         strncpy(username, user.c_str(), sizeof(username) - 1);
     }

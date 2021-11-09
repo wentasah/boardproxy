@@ -29,7 +29,7 @@ class Client
 public:
     Client(ev::loop_ref loop, std::string sock_dir,
            proto::setup::command_t command,
-           std::string username);
+           std::string username, bool no_wait);
     ~Client();
 
 private:
@@ -41,7 +41,7 @@ private:
     void on_data_from_daemon(ev::io &w, int revents);
 
     void send_setup(proto::setup::command_t command,
-                    const std::string &username);
+                    const std::string &username, bool no_wait);
 };
 
 #endif // CLIENT_HPP

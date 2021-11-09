@@ -247,3 +247,23 @@ ip_address = "127.0.0.1"'''
         assert os.path.exists('ssh')
         assert os.path.exists('www')
         assert os.path.exists('wrproxy')
+
+
+def test_no_wait():
+    config = '''\
+[boards.1]
+command = "bash -c 'echo This is board 1; sleep inf'"
+ip_address = "127.0.0.1"
+'''
+    with Daemon(config):
+        # Occupy the board with a client
+        client = Popen(['boardproxy', '.'], stdout=PIPE, text=True)
+        for line in client.stdout:
+            print(line.rstrip())
+            if line == "This is board 1\n":
+                break
+        # Try connecting another client without waiting
+        res = run('boardproxy . --no-wait') # Should exit immediately
+        assert "No board currently available.\n" in res.stderr # No "Waiting..." is present
+        client.terminate() # terminate the first client
+        client.wait()

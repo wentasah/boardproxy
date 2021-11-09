@@ -33,6 +33,7 @@ struct {
     string sock_dir;
     bool list_sessions = false;
     bool allow_set_authorized_keys = false;
+    bool no_wait = false;
 } opt;
 
 static int handle_ssh_command(const string command)
@@ -52,6 +53,7 @@ static int handle_ssh_command(const string command)
 
 enum {
     OPT_ALLOW_SET_AUTHORIZED_KEYS = 1000,
+    OPT_NO_WAIT,
 };
 
 static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
@@ -75,6 +77,9 @@ static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
     case OPT_ALLOW_SET_AUTHORIZED_KEYS:
         opt.allow_set_authorized_keys = true;
         break;
+    case OPT_NO_WAIT:
+        opt.no_wait = true;
+        break;
     case ARGP_KEY_ARG:
         if (argp_state->arg_num == 0)
             opt.sock_dir = arg;
@@ -88,6 +93,8 @@ static error_t parse_opt(int key, char *arg, struct argp_state *argp_state)
             argp_error(argp_state, "--list-sessions is not allowed with --daemon");
         if (opt.allow_set_authorized_keys && opt.daemon)
             argp_error(argp_state, "--allow_set_authorized_keys is not allowed with --daemon");
+        if (opt.daemon && opt.no_wait)
+            argp_error(argp_state, "--no-wait is not allowed with --daemon");
     default:
         return ARGP_ERR_UNKNOWN;
     }
@@ -106,6 +113,7 @@ static struct argp_option options[] = {
     { "name",          'n', "NAME",      0,                   "Client username (useful if multiple users share one UNIX account)" },
     { "sock-dir",      's', "DIR",       OPTION_HIDDEN,       "Directory, where to create UNIX sockets (deprecated)" },
     { "list-sessions", 'l',  0,          0,                   "List all sessions" },
+    { "no-wait",       OPT_NO_WAIT,  0,  0,                   "Don't wait if no board is available" },
     { 0 }
 };
 
@@ -146,7 +154,7 @@ int main(int argc, char *argv[])
             proto::setup::command_t command = proto::setup::command::connect;
             if (opt.list_sessions)
                 command = proto::setup::command::list_sessions;
-            Client c(loop, sock_dir, command, opt.name);
+            Client c(loop, sock_dir, command, opt.name, opt.no_wait);
             loop.run();
         }
     }  catch (std::exception &e) {

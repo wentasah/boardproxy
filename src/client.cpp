@@ -26,7 +26,7 @@ using namespace std;
 
 Client::Client(ev::loop_ref loop, std::string sock_dir,
                proto::setup::command_t command,
-               std::string username)
+               std::string username, bool no_wait)
     : socket(loop, UnixSocket::type::seqpacket)
     , is_connect(command == proto::setup::command::connect)
 {
@@ -36,7 +36,7 @@ Client::Client(ev::loop_ref loop, std::string sock_dir,
     socket.watcher.set<Client, &Client::on_data_from_daemon>(this);
     socket.watcher.start();
 
-    send_setup(command, username);
+    send_setup(command, username, no_wait);
 }
 
 Client::~Client()
@@ -53,13 +53,13 @@ void Client::on_data_from_daemon(ev::io &w, int revents)
     }
 }
 
-void Client::send_setup(proto::setup::command_t command, const std::string &username)
+void Client::send_setup(proto::setup::command_t command, const std::string &username, bool no_wait)
 {
     // Send stdin/out/err to the daemon so that it can run the proxied
     // process on them
     int myfds[3] = { STDIN_FILENO, STDOUT_FILENO, STDERR_FILENO };
     // Also send addition data, needed by the daemon
-    proto::setup data(command, getppid(), username);
+    proto::setup data(command, getppid(), username, no_wait);
 
     struct msghdr msg = { 0 };
     struct cmsghdr *cmsg;

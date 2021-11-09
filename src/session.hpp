@@ -42,7 +42,7 @@ public:
     pid_t get_ppid() const { return ppid; }
     enum status get_status() const { return status; }
 
-    void assign_board(Board *brd);
+    void assign_board(Board &brd);
 
     void new_socket_connection(std::unique_ptr<UnixSocket> s, ProxyFactory &proxy_factory);
     const Board* get_board() const { return board; }

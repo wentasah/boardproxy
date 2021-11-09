@@ -198,6 +198,14 @@ void Session::on_setup_msg(struct msghdr msg)
         logger->info("Client connected");
         // Call this->assign_board with either a board or nullptr
         daemon.assign_board(this);
+        if (status == status::awaiting_board) {
+            logger->warn("No board currently available");
+            daemon.print_status(fd_err);
+            dprintf(fd_err, "No board currently available.%s\n",
+                    s->no_wait ? "" : " Waiting...");
+            if (s->no_wait)
+                return close_session();
+        }
         break;
     case setup::command::list_sessions:
         daemon.print_status(fd_out);
@@ -205,22 +213,16 @@ void Session::on_setup_msg(struct msghdr msg)
     };
 }
 
-void Session::assign_board(Board *brd)
+void Session::assign_board(Board &brd)
 {
-    if (brd) {
-        status = status::has_board;
-        board = brd;
-        board_since = chrono::system_clock::to_time_t(chrono::system_clock::now());
-        board->acquire(this);
-        logger->info("Associated with board {} ({})", board->id, board->ip_address);
-        dprintf(fd_err, "Connecting to board %s\n", board->id.c_str());
+    status = status::has_board;
+    board = &brd;
+    board_since = chrono::system_clock::to_time_t(chrono::system_clock::now());
+    board->acquire(this);
+    logger->info("Associated with board {} ({})", board->id, board->ip_address);
+    dprintf(fd_err, "Connecting to board %s\n", board->id.c_str());
 
-        start_process();
-    } else {
-        logger->warn("No board currently available");
-        daemon.print_status(fd_err);
-        dprintf(fd_err, "No board currently available. Waiting...\n");
-    }
+    start_process();
 }
 
 void Session::start_process()
