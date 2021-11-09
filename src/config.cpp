@@ -68,10 +68,13 @@ static Board create_board(
     if (!ip_address)
         throw runtime_error("no or invalid ip_address for board at " + to_string(board.source().begin));
 
+    const auto reserved_for = board["reserved_for"].value_or("");
+
     return Board(id,
                  get_board_field("command", command_template, board),
                  *ip_address,
-                 get_board_field("close_command", close_command_template, board));
+                 get_board_field("close_command", close_command_template, board),
+                 reserved_for);
 }
 
 static std::list<Board> parse_boards(const string& filename, const toml::table cfg)

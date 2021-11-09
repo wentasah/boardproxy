@@ -267,3 +267,16 @@ ip_address = "127.0.0.1"
         assert "No board currently available.\n" in res.stderr # No "Waiting..." is present
         client.terminate() # terminate the first client
         client.wait()
+
+def test_reserved_for():
+    config = '''\
+[boards.1]
+command = "bash -c 'echo This is board 1'"
+ip_address = "127.0.0.1"
+reserved_for = "boss"
+'''
+    with Daemon(config):
+        res = run('boardproxy . --name poor_guy --no-wait')
+        assert "No board currently available.\n" in res.stderr
+        res = run('boardproxy . --name boss --no-wait')
+        assert "This is board 1" in res.stdout

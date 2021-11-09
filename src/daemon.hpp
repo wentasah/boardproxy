@@ -69,7 +69,7 @@ private:
 
     Session *find_session_by_ppid(pid_t ppid);
 
-    Board *find_available_board();
+    Board *find_available_board(const std::string &username);
 };
 
 #endif // DAEMON_H

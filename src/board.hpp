@@ -28,11 +28,13 @@ public:
     const std::string command;
     const std::string ip_address;
     const std::string close_command;
+    const std::string reserved_for;
 
     Board(std::string id, std::string command, std::string ip_address,
-          std::string close_command);
+          std::string close_command, std::string reserved_for);
 
-    bool is_available() { return owner == nullptr; }
+    /// Is this board available for the given username?
+    bool is_available(const std::string& username);
 
     void acquire(Session *session) { owner = session; }
     void release() { owner = nullptr; }

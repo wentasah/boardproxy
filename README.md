@@ -245,6 +245,9 @@ board can have the following keys:
   this board. When not specified, `close_command_template` from the
   top-level table is used instead.
 
+- `reserved_for` (optional) – only the given user can connect to this
+  board.
+
 - Other arbitrary keys can be used as values of replacement fields in
   [command templates](#command-templates). To prevent name collision
   with keys defined by future boardproxy versions, it is recommended,

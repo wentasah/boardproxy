@@ -16,12 +16,17 @@
 // along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "board.hpp"
 
-Board::Board(std::string id, std::string command, std::string ip_address, std::string close_command)
+Board::Board(std::string id, std::string command, std::string ip_address, std::string close_command, std::string reserved_for)
 
     : id(id)
     , command(command)
     , ip_address(ip_address)
     , close_command(close_command)
+    , reserved_for(reserved_for)
 {
 
+}
+
+bool Board::is_available(const std::string &username) {
+    return owner == nullptr && (reserved_for.empty() || username == reserved_for);
 }

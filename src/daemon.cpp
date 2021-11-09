@@ -78,7 +78,7 @@ Daemon::~Daemon()
 
 void Daemon::assign_board(Session *session)
 {
-    Board *brd = find_available_board();
+    Board *brd = find_available_board(session->get_username());
 
     if (brd) {
         // Notify the session about board availability
@@ -125,10 +125,10 @@ Session *Daemon::find_session_by_ppid(pid_t ppid)
     return nullptr;
 }
 
-Board *Daemon::find_available_board()
+Board *Daemon::find_available_board(const string& username)
 {
     for (auto &board : boards) {
-        if (board.is_available())
+        if (board.is_available(username))
             return &board;
     }
     return nullptr;
@@ -140,12 +140,13 @@ void Daemon::close_session(Session *session)
     wait_queue.remove(session);
     sessions.remove_if([&](auto &s) { return &s == session; });
 
-    if (wait_queue.size() > 0) {
-        Board *board = find_available_board();
+    // Go through waiting users if some of them can get the freed board.
+    for (Session *waiting : wait_queue) {
+        Board *board = find_available_board(waiting->get_username());
         if (board) {
-            Session *sess = wait_queue.front();
-            wait_queue.pop_front();
-            sess->assign_board(*board);
+            wait_queue.remove(waiting);
+            waiting->assign_board(*board);
+            break;
         }
     }
 
