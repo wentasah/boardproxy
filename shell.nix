@@ -8,7 +8,6 @@ mkShell {
   buildInputs = [
      ccls
      ccache
-     python38Packages.pytest
      python38Packages.python-language-server
   ];
 }
