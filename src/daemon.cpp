@@ -136,7 +136,7 @@ Board *Daemon::find_available_board()
 
 void Daemon::close_session(Session *session)
 {
-    wait_queue.remove_if([&](auto &s) { return s == session; });
+    wait_queue.remove(session);
     sessions.remove_if([&](auto &s) { return &s == session; });
 
     if (wait_queue.size() > 0) {
