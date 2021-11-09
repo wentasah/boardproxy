@@ -213,7 +213,47 @@ The `--allow-set-authorized-keys` option allows users to set their SSH
 
     ssh login@board-server.example.com set-authorized-keys < ~/.ssh/id_rsa.pub
 
+## Configuration file reference
 
+### Top-level table
+
+- `command_template` (optional) – command to execute by the daemon
+  when connecting to a board, which has not specified `command`
+  explicitly. The template can contain *replacement fields* in [fmt
+  syntax](https://fmt.dev/latest/syntax.html), which get replaced by
+  values of keys specified for each board. See [this configuration
+  file](./configs/psr-hw.toml) for examples.
+
+- `close_command_template` (optional) – command to execute by the
+  daemon when disconnecting from a board, which has not specified
+  `close_command` explicitly. The *replacement fields* can be used the
+  same way as in the `command_template`.
+
+### `boards` table
+
+Keys are board names, values are tables defining each board. Each
+board can have the following keys:
+
+- `ip_address` (mandatory) – IP address of the board used for [port
+  forwarding](#port-forwarding).
+
+- `command` (optional) – command to execute when connecting to the given board.
+  When not specified, `command_template` from the top-level table is
+  used instead.
+
+- `close_command` (optional) – command to execute when closing a session with
+  this board. When not specified, `close_command_template` from the
+  top-level table is used instead.
+
+- Other arbitrary keys can be used as values of replacement fields in
+  [command templates](#command-templates). To prevent name collision
+  with keys defined by future boardproxy versions, it is recommended,
+  though not required, to start those user-defined keys with an
+  underscore (`_`).
+
+### `sockets` table
+
+TODO
 
 <!--  LocalWords:  boardproxy
  -->
