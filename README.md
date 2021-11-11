@@ -83,7 +83,7 @@ To connect one of the boards, run:
 
 If a board is available, the daemon runs the corresponding `command`
 with its stdin/out/err connected to stdin/out/err of the client. The
-commands above allow the user to interact with the board serial line
+commands above allow the user to interact with the board's serial line
 via the [sterm](https://github.com/wentasah/sterm) program.
 
 If all boards are occupied, a list of boards and their users is
