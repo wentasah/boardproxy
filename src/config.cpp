@@ -19,6 +19,9 @@
 #include "config.hpp"
 #include "toml.hpp"
 #include <fmt/format.h>
+#if FMT_VERSION > 70103
+#  include <fmt/args.h>
+#endif
 #include <iostream>
 
 #include "tcpproxy.hpp"
