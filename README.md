@@ -92,10 +92,10 @@ disconnects, the first waiting user gets the board.
 
 ## Port forwarding
 
-Boardproxy can forward network traffic to connected boards. A nice
-feature is that users do not have to care about which board they
-connect to – boardproxy ensures that the traffic is forwarded to the
-board assigned to the user.
+Boardproxy can forward network traffic to connected boards. This
+feature is nicely integrated with SSH port forwarding in such a way
+that users do not have to care about which board they get connected to
+– boardproxy ensures that the traffic is forwarded to the right board.
 
 For example, to access the board's SSH and HTTP server, add the
 following to the daemon configuration file:
@@ -111,7 +111,8 @@ forward TCP connections to `boardproxy` and boardproxy then proxies the
 connection to the correct board. More specifically, when users connect
 to the board like this:
 
-    ssh -L2222:/run/my_boards/ssh -L8080:/run/my_boards/www login@board-server.example.com
+    ssh -L2222:/run/my_boards/ssh -L8080:/run/my_boards/www \
+        login@board-server.example.com boardproxy /run/my_boards
 
 then the board's SSH server can be reached with:
 
@@ -177,8 +178,9 @@ There are at least two ways, how boardproxy users can be managed:
 
 - Each user has a separate UNIX account on the boardproxy server.
 
-  In this case, users can run boardproxy clients manually or their
-  accounts can be configured as described in [SSH
+  In this case, users can run boardproxy clients manually (for
+  example, as shown [above]((#port-forwarding))) or their accounts can
+  be configured as described in [SSH
   ForcedCommand](#ssh-forcedcommand) section below.
 
 - All users share a single UNIX account and are authenticated by their
