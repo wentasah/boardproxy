@@ -127,8 +127,14 @@ Session *Daemon::find_session_by_ppid(pid_t ppid)
 
 Board *Daemon::find_available_board(const string& username)
 {
+    // First search for reserved board
     for (auto &board : boards) {
-        if (board.is_available(username))
+        if (board.is_available() && !board.reserved_for.empty() && board.reserved_for == username)
+            return &board;
+    }
+    // Then for other boards
+    for (auto &board : boards) {
+        if (board.is_available() && board.reserved_for.empty())
             return &board;
     }
     return nullptr;

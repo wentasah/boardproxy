@@ -27,6 +27,6 @@ Board::Board(std::string id, std::string command, std::string ip_address, std::s
 
 }
 
-bool Board::is_available(const std::string &username) {
-    return owner == nullptr && (reserved_for.empty() || username == reserved_for);
+bool Board::is_available() const {
+    return owner == nullptr;
 }

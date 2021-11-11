@@ -33,8 +33,7 @@ public:
     Board(std::string id, std::string command, std::string ip_address,
           std::string close_command, std::string reserved_for);
 
-    /// Is this board available for the given username?
-    bool is_available(const std::string& username);
+    bool is_available() const;
 
     void acquire(Session *session) { owner = session; }
     void release() { owner = nullptr; }
