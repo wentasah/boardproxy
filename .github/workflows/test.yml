@@ -18,6 +18,8 @@ jobs:
       run: echo "::add-matcher::.github/problem-matchers/gcc.json"
     - name: Build with nix-build
       run: nix-build
+    - name: Build with meson --wrap-mode=forcefallback
+      run: nix-shell default.nix --run "meson --wrap-mode=forcefallback build && meson compile -C build"
   older-versions:
     runs-on: ubuntu-latest
     steps:
