@@ -7,7 +7,6 @@ mkShell {
   ];
   buildInputs = [
      ccls
-     ccache
-     python38Packages.python-language-server
+     python3Packages.python-lsp-server
   ];
 }
