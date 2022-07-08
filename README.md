@@ -3,6 +3,9 @@
 Manage remote access to a pool of (embedded) boards or computers and
 allow SSH-based port forwarding.
 
+![remote-boards](https://user-images.githubusercontent.com/140542/178039732-84017b15-9c51-472b-b509-90dc02dfc758.jpg)
+
+
 <!-- markdown-toc start - Don't edit this section. Run M-x markdown-toc-refresh-toc -->
 **Table of Contents**
 
