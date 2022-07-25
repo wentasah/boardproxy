@@ -1,4 +1,4 @@
-// Copyright (C) 2021 Michal Sojka <michal.sojka@cvut.cz>
+// Copyright (C) 2021, 2022 Michal Sojka <michal.sojka@cvut.cz>
 // 
 // This file is part of boardproxy.
 // 
@@ -143,7 +143,7 @@ void Session::on_data_from_client(ev::io &w, int revents)
         break;
     }
     default:
-        logger->error("Unknown message type {}", h.id);
+        logger->error("Unknown message type {}", static_cast<int>(h.id));
     }
 
 //        switch (header.id) {
