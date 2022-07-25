@@ -1,4 +1,4 @@
-name: "Complie"
+name: "Compile"
 on:
   pull_request:
   push:
