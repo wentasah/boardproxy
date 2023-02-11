@@ -11,7 +11,7 @@ clean:
 	rm -rf build
 
 %/build.ninja:
-	meson $(@D) $(MESON_OPTS)
+	meson setup $(@D) $(MESON_OPTS)
 
 debug: MESON_OPTS=--buildtype=debug -Db_sanitize=address,undefined
 debug: build/build.ninja
