@@ -11,7 +11,8 @@ let
         }) {};
     in
       pkgs.callPackage ./boardproxy.nix {
-        fmt = if pkgs.lib.versionAtLeast pkgs.spdlog.version "1.9"
+        fmt = if pkgs.lib.versionAtLeast pkgs.spdlog.version "1.9" &&
+                 pkgs.lib.versionOlder pkgs.spdlog.version "1.11"
               then pkgs.fmt_8
               else pkgs.fmt;
       };
