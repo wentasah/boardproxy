@@ -10,11 +10,6 @@ let
           url = "https://github.com/NixOS/nixpkgs/archive/refs/heads/${branch}.tar.gz";
         }) {};
     in
-      pkgs.callPackage ./boardproxy.nix {
-        fmt = if pkgs.lib.versionAtLeast pkgs.spdlog.version "1.9" &&
-                 pkgs.lib.versionOlder pkgs.spdlog.version "1.11"
-              then pkgs.fmt_8
-              else pkgs.fmt;
-      };
+      pkgs.callPackage ./boardproxy.nix {};
 in
 map build nixpkgs-versions

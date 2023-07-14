@@ -1,4 +1,4 @@
-{ stdenv, lib, meson, ninja, pkg-config, libev, fmt, spdlog, boost, nix-gitignore, systemd, python3Packages, netcat }:
+{ stdenv, lib, meson, ninja, pkg-config, libev, spdlog, boost, nix-gitignore, systemd, python3Packages, netcat }:
 stdenv.mkDerivation {
   name = "boardproxy";
   src = if builtins.pathExists ./.git then
@@ -11,7 +11,7 @@ stdenv.mkDerivation {
   ];
 
   nativeBuildInputs = [ meson ninja pkg-config ];
-  buildInputs = [ libev fmt spdlog boost systemd ];
+  buildInputs = [ libev spdlog boost systemd ];
 
   doCheck = true;
   checkInputs = [ python3Packages.pytest netcat ];
