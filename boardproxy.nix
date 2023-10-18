@@ -1,6 +1,7 @@
-{ stdenv, lib, meson, ninja, pkg-config, libev, spdlog, boost, nix-gitignore, systemd, python3Packages, netcat }:
+{ stdenv, lib, meson, ninja, pkg-config, libev, spdlog, boost, nix-gitignore, systemd, python3Packages, netcat, version ? "" }:
 stdenv.mkDerivation {
-  name = "boardproxy";
+  pname = "boardproxy";
+  inherit version;
   src = if builtins.pathExists ./.git then
     builtins.fetchGit { url = ./.; }
   else

@@ -10,6 +10,6 @@ let
           url = "https://github.com/NixOS/nixpkgs/archive/refs/heads/${branch}.tar.gz";
         }) {};
     in
-      pkgs.callPackage ./boardproxy.nix {};
+      pkgs.callPackage ./boardproxy.nix { version = "nixpkgs-${branch}"; };
 in
 map build nixpkgs-versions
