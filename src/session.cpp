@@ -1,4 +1,4 @@
-// Copyright (C) 2021, 2022 Michal Sojka <michal.sojka@cvut.cz>
+// Copyright (C) 2021, 2022, 2025 Michal Sojka <michal.sojka@cvut.cz>
 // 
 // This file is part of boardproxy.
 // 
@@ -22,6 +22,7 @@
 #include <spdlog/sinks/stdout_color_sinks.h>
 #include <boost/program_options/parsers.hpp>
 #include <cstdio>
+#include <ctime>
 #include <fmt/format.h>
 #include <fmt/chrono.h>
 #include "session.hpp"
@@ -93,11 +94,11 @@ string Session::get_username() const
 
 string Session::get_status_line() const
 {
-    return fmt::format(("{:10s} {:10s} {:15s} {:%c}"),
+    return fmt::format("{:10s} {:10s} {:15s} {:%c}",
                        get_username(),
                        board ? board->id : "",
                        board ? board->ip_address : "waiting",
-                       fmt::localtime(board ? board_since : session_since));
+                       *std::localtime(board ? &board_since : &session_since));
 }
 
 void Session::on_data_from_client(ev::io &w, int revents)
